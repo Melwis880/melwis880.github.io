@@ -1,0 +1,135 @@
+{{ define "header" }}
+<style type="text/css">
+    header.intro-header {
+        background-image: url('{{ if .Params.image }}{{ .Params.image | relURL }}{{ else }}{{ .Site.Params.header_image | relURL}}{{ end }}')
+    }
+</style>
+{{ if eq .Params.headerstyle "text" }}
+<header class="intro-header style-text" >
+{{ else }}
+<header class="intro-header" >
+{{ end }}
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        {{ range .Params.tags }}
+                        <a class="tag" href="{{ "/tags/" | relLangURL }}{{ . | urlize }}" title="{{ . }}">
+                            {{ . }}
+                        </a>
+                        {{ end }}
+                    </div>
+                    <h1>{{ .Title }}</h1>
+                    <h2 class="subheading">{{ .Params.subtitle }}</h2>
+                    <span class="meta">
+                        Posted by 
+                        {{ if .Params.author }}{{ .Params.author }}{{ else }}{{ .Site.Title }}{{ end }} 
+                        on {{ .Date.Format "Monday, January 2, 2006" }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+{{ end }}
+
+{{ define "main" }}
+
+<div class="container" style="margin-top: 30px;">
+    <div class="row">
+        <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+            <nav aria-label="breadcrumb" style="background: #fff; padding: 12px 20px; border: 1px solid #eee; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <ol class="breadcrumb" style="margin-bottom: 0; background-color: transparent; padding: 0; list-style: none; display: flex; align-items: center; font-size: 13.5px;">
+                    
+                    <li>
+                        <a href="{{ .Site.BaseURL | relLangURL }}">
+                            <i class="fa fa-home"></i> Home
+                        </a>
+                    </li>
+
+                    {{ range (split .RelPermalink "/") }}
+                        {{ if and (ne . "") (ne . "post") }}
+                            <li>
+                                <a href="{{ "/" | relLangURL }}{{ . | urlize }}">
+                                    {{ . | humanize | upper }}
+                                </a>
+                            </li>
+                        {{ end }}
+                    {{ end }}
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<style>
+/* 1. RENK AYARLARI (GÜÇLENDİRİLMİŞ SEÇİCİLER) */
+
+/* Normal Durum: Koyu Gri (#404040) */
+.breadcrumb li a {
+    color: #404040 !important; 
+    text-decoration: none !important;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+/* Home İkonu Rengi */
+.breadcrumb li a i {
+    color: #404040 !important;
+}
+
+/* Hover (Üzerine Gelince) Durumu: Turuncu (#ff9800) */
+.breadcrumb li a:hover {
+    color: #ff9800 !important;
+}
+
+.breadcrumb li a:hover i {
+    color: #ff9800 !important;
+}
+
+/* 2. TEK ÇİZGİ AYARI */
+/* Her elemanın arasına gri, tek bir çizgi koy */
+.breadcrumb > li + li:before {
+    content: "/" !important;
+    padding: 0 8px !important;
+    color: #ccc !important; /* Açık gri çizgi rengi */
+}
+</style>
+
+<article>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 post-container">
+                {{ .Content }}
+                
+                {{ if .Site.Params.reward }}
+                {{ partial "reward.html" . }}
+                {{ end }}
+
+                {{ partial "comments.html" . }}
+            </div>
+
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 sidebar-container">
+                {{ if .Site.Params.featured_tags }}
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        {{ $featured_condition_size := .Site.Params.featured_condition_size }}
+                        {{ range $name, $taxonomy := .Site.Taxonomies.tags }}
+                        {{ if gt (len $taxonomy.Pages) $featured_condition_size }}
+                        <a href="{{ "/tags/" | relLangURL }}{{ $name | urlize }}" title="{{ $name }}">
+                            {{ $name }}
+                        </a>
+                        {{ end }}
+                        {{ end }}
+                    </div>
+                </section>
+                {{ end }}
+            </div>
+        </div>
+    </div>
+</article>
+
+{{ end }}
