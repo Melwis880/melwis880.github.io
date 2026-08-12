@@ -1,0 +1,250 @@
+/* --- NAVİGASYON ANA AYARLAR --- */
+.navbar-custom .nav li a:hover,
+.navbar-custom .nav li a:focus {
+    background-color: transparent !important;
+    color: #ff9800 !important; /* Seçtiğin turuncu tonu */
+}
+
+/* --- ANA MENÜ ALTI ÇİZGİ (AHMET GÜREL TARZI) --- */
+.navbar-custom .nav li a::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 2px;
+    background: #ff9800;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Daha profesyonel hız eğrisi */
+    margin: 4px auto 0;
+}
+
+.navbar-custom .nav li a:hover::after {
+    width: 100%;
+}
+
+/* --- AÇILIR MENÜ (DROPDOWN) KUTUSU --- */
+.dropdown-menu {
+    background-color: #121212 !important; /* Saf siyaha yakın derin gri */
+    border-top: 3px solid #ff9800 !important;
+    border-radius: 0 0 4px 4px !important; /* Sadece alt köşeler yuvarlak */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6) !important;
+    padding: 5px 0 !important;
+    border: none !important;
+    margin-top: 2px !important;
+}
+
+/* --- ALT MENÜ ÖĞELERİ --- */
+.dropdown-menu > li > a {
+    color: #e0e0e0 !important;
+    padding: 12px 20px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    transition: all 0.25s ease;
+}
+
+/* --- ALT MENÜ HOVER (ÜZERİNE GELİNCE) --- */
+.dropdown-menu > li > a:hover {
+    background-color: #1f1f1f !important; /* Hafif aydınlanma */
+    color: #ff9800 !important;
+    padding-left: 28px !important; /* Şık bir sağa kayma efekti */
+}
+
+/* --- OK İŞARETİ (CARET) RENGİ --- */
+.navbar-custom .nav li a .caret {
+    border-top-color: #ffffff;
+    border-bottom-color: #ffffff;
+}
+
+.navbar-custom .nav li a:hover .caret {
+    border-top-color: #ff9800;
+    border-bottom-color: #ff9800;
+}
+
+
+
+/* YAZI ÖNİZLEME VE READMORE EKLEME *?
+
+/* Yazı önizleme linkini kutu haline getir */
+.post-preview > a {
+    text-decoration: none !important;
+    display: block;
+    position: relative;
+}
+
+/* Özet metninin alt boşluğunu ayarla */
+.post-content-preview {
+    font-size: 14px;
+    color: #404040 !important;
+    line-height: 1.7;
+    margin-bottom: 25px !important;
+    display: block;
+}
+
+
+/* --- PROFESYONEL READ MORE BUTONU (AHMET GÜREL BOYUTLARINDA) --- */
+.post-preview > a::after {
+    content: "READ MORE";
+    display: inline-block;
+    
+    /* İlk Durum: Turuncu Arka Plan, Beyaz Yazı */
+    background-color: #ff9800 !important; 
+    color: #ffffff !important; 
+    
+    /* Boyut ve Font Ayarları (Daha küçük ve zarif) */
+    font-size: 11px !important; /* Font küçültüldü */
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    
+    /* Boşluk Ayarları (Butonu küçülten kısım) */
+    padding: 8px 9px !important; /* İç boşluklar daraltıldı */
+    border: 1.5px solid #ff9800 !important;
+    border-radius: 3px;
+    
+    transition: all 0.25s ease-in-out;
+    margin-top: 12px;
+    cursor: pointer;
+}
+
+/* --- HOVER DURUMU --- */
+.post-preview > a:hover::after {
+    /* İkinci Durum: Siyah Arka Plan, Turuncu Yazı */
+    background-color: #000000 !important; 
+    color: #ff9800 !important; 
+    border-color: #ff9800 !important;
+    
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px); /* Çok hafif yukarı kalkma */
+}
+
+
+
+
+/* Hakkımda sayfasındaki ana görseli ortalar ve gölge ekler */
+.post-container img {
+    display: block;
+    margin: 0 auto 30px auto;
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+
+
+
+
+/* --- BREADCRUMB TASARIMI --- */
+.breadcrumb {
+    background-color: transparent !important;
+    padding: 15px 0 !important;
+    margin-bottom: 20px;
+    list-style: none;
+    font-size: 13px;
+    border-bottom: 1px solid #eee; /* Hafif bir ayırıcı çizgi */
+}
+
+.breadcrumb li {
+    display: inline;
+    color: #999;
+}
+
+.breadcrumb li + li:before {
+    content: "/\00a0"; /* Aralardaki eğik çizgi */
+    padding: 0 5px;
+    color: #ccc;
+}
+
+.breadcrumb li a {
+    color: #ff9800 !important; /* Senin turuncun */
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.breadcrumb li a:hover {
+    color: #000 !important;
+    text-decoration: underline;
+}
+
+
+
+
+/* --- MENÜ ÜZERİNE GELİNCE OTOMATİK AÇILMA --- */
+
+
+@media only screen and (min-width: 768px) {
+    /* Menü ve Alt Menülerin Kapanmasını Önleyen Köprü */
+    .dropdown:hover > .dropdown-menu {
+        display: block;
+        margin-top: 0; /* Aradaki boşluğu sıfırlar */
+        opacity: 1;
+        visibility: visible;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    /* Fare aşağı inerken menünün hemen kapanmaması için görünmez bir alan ekler */
+    .dropdown-menu::before {
+        content: "";
+        position: absolute;
+        top: -20px; /* Üstteki başlığa doğru 20px'lik görünmez bir alan açar */
+        left: 0;
+        right: 0;
+        height: 20px;
+        display: block;
+    }
+
+    /* Alt menülerin (yan yana açılanlar) stabil çalışması */
+    .dropdown-submenu:hover > .dropdown-menu {
+        display: block;
+        left: 100%;
+        top: 0;
+        margin-left: 0;
+    }
+}
+
+/* Yumuşak ve profesyonel belirme animasyonu */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(5px); /* Mesafeyi 10'dan 5'e düşürdük, daha stabil olur */
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+
+
+/* --- ANA SAYFA HEADER FONT DÜZENLEME --- */
+
+/* Ana başlıktaki fontu inceltir (400 veya 300 idealdir) */
+header.intro-header .site-heading h1, 
+header.intro-header .post-heading h1 {
+    font-weight: 300 !important; /* Standart kalınlık 700'den 300'e çekildi */
+    letter-spacing: 1px;        /* Harf aralarını biraz açarak ferahlatıyoruz */
+    text-transform: none;       /* Eğer hepsi büyük harfse bunu 'none' yaparak doğallaştırabilirsin */
+}
+
+/* Başlığın altındaki açıklama yazısını (subtitle) düzenler */
+header.intro-header .site-heading .subheading, 
+header.intro-header .post-heading .subheading {
+    font-weight: 300 !important;
+    font-style: italic;         /* Daha estetik bir görünüm için italik yaptık */
+    opacity: 0.8;               /* Biraz daha saydamlaştırarak derinlik kattık */
+}
+
+
+
+
+/* Sol üstteki logonun (M.Meriç Blog) her zaman görünür olmasını sağla */
+.navbar-custom .navbar-brand {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+
+
+

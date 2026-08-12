@@ -1,0 +1,16 @@
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+            <nav aria-label="breadcrumb" style="background: #fff; padding: 10px 15px; margin-bottom: 20px; border: 1px solid #eee; border-radius: 4px;">
+                <ol class="breadcrumb" style="margin-bottom: 0; background-color: transparent; padding: 0; list-style: none; display: flex; font-size: 13px;">
+                    <li style="display: inline;"><a href="{{ .Site.BaseURL | relLangURL }}" style="color: #ff9800; font-weight: bold;"><i class="fa fa-home"></i> Home</a></li>
+                    {{ range (split .RelPermalink "/") }}
+                        {{ if and (ne . "") (ne . "post") }}
+                            <li style="display: inline; color: #999;">&nbsp; / &nbsp;<a href="{{ "/" | relLangURL }}{{ . | urlize }}" style="color: #666; text-transform: uppercase;">{{ . | humanize }}</a></li>
+                        {{ end }}
+                    {{ end }}
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
