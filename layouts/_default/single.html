@@ -41,7 +41,9 @@
                 {{.TableOfContents}}
                 {{ end }}
                 -->
-                {{ .Content }}
+                <div data-pagefind-body>
+                    {{ .Content }}
+                </div>
 
                 {{ if .Site.Params.reward }}
                 {{ partial "reward.html" . }}

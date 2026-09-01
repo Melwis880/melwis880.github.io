@@ -17,7 +17,7 @@ hasCJKLanguage = false
   pagerSize = 5 # frontpage pagination
 
 [outputs]
-home = ["HTML", "RSS", "Algolia"]
+home = ["HTML", "RSS"]
 
 [params]
 
@@ -43,12 +43,6 @@ home = ["HTML", "RSS", "Algolia"]
   page_view_counter = false
   leancloud_app_id = ""
   leancloud_app_key = ""
-
-  # algolia site search
-  algolia_search = false
-  algolia_appId = ""
-  algolia_indexName = ""
-  algolia_apiKey = ""
 
   # Sidebar settings
   sidebar_about_description = "Teknoloji, açık kaynak ve siber güvenlik meraklısı. Öğrenmek ve paylaşmak için buradayım."
@@ -166,16 +160,6 @@ home = ["HTML", "RSS", "Algolia"]
 
 
 
-
-[outputFormats.Algolia]
-baseName = "algolia"
-isPlainText = true
-mediaType = "application/json"
-notAlternative = true
-
-[params.algolia]
-vars = ["title", "summary", "date", "publishdate", "expirydate", "permalink"]
-params = ["categories", "tags"] 
 
 [markup]
   [markup.tableOfContents]

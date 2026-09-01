@@ -1,8 +1,24 @@
-<link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
-<script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+<link href="/pagefind/pagefind-ui.css" rel="stylesheet">
+<script src="/pagefind/pagefind-ui.js" type="text/javascript"></script>
 <div id="search"></div>
 <script>
     window.addEventListener('DOMContentLoaded', (event) => {
-        new PagefindUI({ element: "#search" });
+        new PagefindUI({
+            element: "#search",
+            showSubResults: true,
+            translations: {
+                placeholder: "Sitede ara...",
+                clear_search: "Temizle",
+                load_more: "Daha fazla sonuç yükle",
+                search_label: "Bu site içinde ara",
+                filters_label: "Filtreler",
+                zero_results: "[SEARCH_TERM] için sonuç bulunamadı",
+                many_results: "[SEARCH_TERM] için [COUNT] sonuç bulundu",
+                one_result: "[SEARCH_TERM] için [COUNT] sonuç bulundu",
+                alt_search: "[SEARCH_TERM] için sonuç bulunamadı. [DIFFERENT_TERM] için sonuçlar gösteriliyor",
+                search_suggestion: "[SEARCH_TERM] için sonuç bulunamadı. Şunlardan birini deneyin:",
+                searching: "[SEARCH_TERM] için aranıyor..."
+            }
+        });
     });
 </script>
