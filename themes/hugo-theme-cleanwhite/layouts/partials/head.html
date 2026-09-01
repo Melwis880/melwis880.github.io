@@ -3,48 +3,24 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- start ogp -->
-    <meta property="og:site_name" content="{{ .Site.Title }}">
-    <meta property="og:type" content="article">
+    <!-- start ogp: Hugo dahili OpenGraph şablonu (title, description, url, site_name, locale, article tarih/tag'leri vb.) -->
+    {{ template "_internal/opengraph.html" . }}
 
-    {{ if .Params.thumbnail }}
-    <meta property="og:image" content="{{ .Site.BaseURL }}{{ .Params.thumbnail }}">
-    <meta property="twitter:image" content="{{ .Site.BaseURL }}{{ .Params.thumbnail }}" />
-    {{ else if .Params.image}}
-    <meta property="og:image" content="{{ .Site.BaseURL }}{{ .Params.image }}">
-    <meta property="twitter:image" content="{{ .Site.BaseURL }}{{ .Params.image }}" />
-    {{ else }}
-    <meta property="og:image" content="{{ .Site.BaseURL }}/{{ .Site.Params.header_image }}">
-    <meta property="twitter:image" content="{{ .Site.BaseURL }}/{{ .Site.Params.header_image }}" />
-    {{ end }}
-
-    {{ if .Params.title }}
-    <meta name="title" content="{{ .Params.title }}" />
-    <meta property="og:title" content="{{ .Params.title }}" />
-    <meta property="twitter:title" content="{{ .Params.title }}" />
-    {{ else }}
-    <meta name="title" content="{{ .Site.Params.title }}" />
-    <meta property="og:title" content="{{ .Site.Params.title }}" />
-    <meta property="twitter:title" content="{{ .Site.Params.title }}" />
-    {{ end }}
-
-    {{ if .Params.description }}
-    <meta name="description" content="{{ .Params.description }}">
-    <meta property="og:description" content="{{ .Params.description }}" />
-    <meta property="twitter:description" content="{{ .Params.description }}" />
-    {{ else }}
-    <meta name="description" content="{{ .Site.Params.description }}">
-    <meta property="og:description" content="{{ .Site.Params.description }}" />
-    <meta property="twitter:description" content="{{ .Site.Params.description }}" />
-    {{ end }}
-
-    <meta property="og:url" content="{{ .Permalink }}" />
-
-    {{ if .Params.summary }}
-    <meta property="twitter:card" content="{{ .Params.summary }}" />
-    {{ else }}
-    <meta property="twitter:card" content="summary" />
-    {{ end }}
+    <!--
+        _internal/twitter_cards.html kasıtlı olarak çağrılmıyor: görsel bulamasa bile koşulsuz
+        kendi twitter:card="summary" etiketini basıyor ve bunu bastırmanın bir yolu yok, bu da
+        aşağıdaki elle yazılan summary_large_image etiketiyle duplicate/çakışma yaratıyordu.
+        Twitter/X, twitter:title / twitter:description / twitter:image tanımlı değilse zaten
+        otomatik olarak og:title / og:description / og:image'a düşüyor (resmen belgelenmiş
+        davranış) - sadece twitter:card'ın OG karşılığı yok, o yüzden sadece onu ve görsel
+        override'ını (tema `image` tekil alanını kullanır, dahili şablonun beklediği `images`
+        dizisini değil) burada elle basıyoruz.
+    -->
+    {{ $ogImage := .Site.Params.header_image | absURL }}
+    {{ with .Params.image }}{{ $ogImage = . | absURL }}{{ end }}
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta name="twitter:image" content="{{ $ogImage }}">
+    <meta name="twitter:card" content="summary_large_image">
     <!-- end ogp -->
 
     <meta name="keyword"  content="{{ .Site.Params.keyword }}">
