@@ -185,7 +185,7 @@ params = ["categories", "tags"]
     style = "dracula"
   [markup.goldmark]
     [markup.goldmark.renderer]
-      unsafe = true
+      unsafe = false
     [markup.goldmark.extensions]
       [markup.goldmark.extensions.passthrough]
         enable = true

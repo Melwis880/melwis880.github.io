@@ -2,7 +2,7 @@
 <!-- Post Header -->
 <style type="text/css">
     header.intro-header {
-        background-image: url('{{ if .Params.image }}{{ .Params.image | relURL }}{{ else }}{{ .Site.Params.header_image | relURL}}{{ end }}')
+        background-image: url('{{ if .Params.image }}{{ .Params.image | relURL | safeURL }}{{ else }}{{ .Site.Params.header_image | relURL | safeURL }}{{ end }}')
     }
 </style>
 {{ if eq .Params.headerstyle "text" }}
