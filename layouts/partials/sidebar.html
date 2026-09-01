@@ -7,21 +7,10 @@
     col-xs-12
     sidebar-container
 ">
-<section>
-    <div class="search-widget" style="margin-bottom: 30px;">
-        <h5 style="font-weight: bold; letter-spacing: 1px; color: #333; border-bottom: 2px solid #ff9800; display: inline-block; margin-bottom: 15px;">SEARCH NOW</h5>
-        <form action="{{ "search/" | relLangURL }}" method="GET">
-            <div class="input-group">
-                <input type="text" name="q" class="form-control" placeholder="ຟ𝔥𝔞𝔱 𝔞𝔯𝔢 𝔶𝔬𝔲 𝔩𝔬𝔬𝔨𝔦𝔫𝔤 𝔣𝔬𝔯 ? " style="border-radius: 0; box-shadow: none;">
-                <span class="input-group-btn">
-                    <button class="btn btn-warning" type="submit" style ="border-radius: 0; background-color: #ff9800; border-color: #ff9800;">
-                        <i class="fa fa-search"></i>
-                    </button>
-                </span>
-            </div>
-        </form>
-    </div>
-</section>
+<!-- SEARCH NOW widget removed: navbar already has a global search icon linking to /search/,
+     and this form's query string was never actually consumed by the Pagefind UI on that page
+     (Pagefind's default UI has no documented "initial query" option), so it only produced a
+     duplicate, non-functional-looking search box. -->
 
     <!-- Short About -->
 	{{ if .Site.Params.about_me }}

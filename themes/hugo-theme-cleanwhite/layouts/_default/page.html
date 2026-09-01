@@ -21,11 +21,13 @@
                 </div>
             
                 <!-- English Version -->
-                <div class="en post-container">
+                <div class="en post-container" data-pagefind-body>
                     {{ .Content }}
                 </div>
             {{ else }}
-                {{ .Content }}
+                <div data-pagefind-body>
+                    {{ .Content }}
+                </div>
             {{ end }}
              
             {{ partial "comments.html" . }}
