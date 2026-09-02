@@ -3,6 +3,7 @@ title:       "Siralama Algoritmaları"
 subtitle:    ""
 description: "bu ilk deneme yazısıdır"
 date:        2026-02-09
+draft:       true
 author:      ""
 image:       ""
 tags:        ["tag1", "tag2"]

@@ -1,7 +1,6 @@
 ---
 title: "Hakkımda"
 layout: page
-multilingual: true
 ---
 
 
