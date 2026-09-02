@@ -5,6 +5,37 @@ locale = "tr-TR"
 preserveTaxonomyNames = true
 hasCJKLanguage = false
 
+# Herhangi bir [[module.mounts]] tanımlandığında Hugo'nun 7 varsayılan mount'unun
+# (content/data/layouts/i18n/archetypes/assets/static) TAMAMI kaybolur, tek tek
+# yeniden tanımlanması gerekir - aksi halde içerik/layout okunmaz olur. Sondaki
+# ekstra `static -> assets` mount'u, mevcut static/ klasör yapısını değiştirmeden
+# resources.Get ile aynı dosyaları Hugo Pipes görsel işleme için de erişilebilir kılar.
+[module]
+  [[module.mounts]]
+    source = "content"
+    target = "content"
+  [[module.mounts]]
+    source = "data"
+    target = "data"
+  [[module.mounts]]
+    source = "layouts"
+    target = "layouts"
+  [[module.mounts]]
+    source = "i18n"
+    target = "i18n"
+  [[module.mounts]]
+    source = "archetypes"
+    target = "archetypes"
+  [[module.mounts]]
+    source = "assets"
+    target = "assets"
+  [[module.mounts]]
+    source = "static"
+    target = "static"
+  [[module.mounts]]
+    source = "static"
+    target = "assets"
+
 
 [services]
   # Enable comments by entering your Disqus shortname

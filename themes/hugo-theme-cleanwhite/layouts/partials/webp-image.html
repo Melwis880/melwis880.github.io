@@ -1,0 +1,29 @@
+{{- /*
+  Görsel dönüştürme yardımcı partial'ı.
+
+  Girdi (context/`.`): front-matter'daki gibi site-root-relative bir görsel path'i
+  (ör. "img/head_image1.jpg") ya da tam bir http(s) URL'i.
+
+  Çıktı: yerel bir .jpg/.jpeg/.png ise resources.Get + .Process "webp" ile üretilen
+  WebP dosyasının mutlak URL'i. Uzak (http/https) bir URL ise, ya da kaynak
+  bulunamıyorsa/desteklenmeyen bir uzantıysa, orijinal path'in mutlak hali döner -
+  build hiçbir durumda kırılmaz.
+
+  Not: resources.Get'in çalışabilmesi için static/'in hugo.toml'de [[module.mounts]]
+  ile assets/ olarak da mount edilmiş olması gerekir.
+
+  Kullanım: {{ partial "webp-image.html" "img/head_image1.jpg" | safeURL }}
+*/ -}}
+{{- $path := . -}}
+{{- $result := $path | absURL -}}
+{{- if not (or (hasPrefix $path "http://") (hasPrefix $path "https://")) -}}
+  {{- $ext := path.Ext $path | lower -}}
+  {{- if or (eq $ext ".jpg") (eq $ext ".jpeg") (eq $ext ".png") -}}
+    {{- with resources.Get $path -}}
+      {{- with .Process "webp" -}}
+        {{- $result = .Permalink -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $result -}}

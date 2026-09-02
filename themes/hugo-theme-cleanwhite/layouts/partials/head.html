@@ -16,8 +16,8 @@
         override'ını (tema `image` tekil alanını kullanır, dahili şablonun beklediği `images`
         dizisini değil) burada elle basıyoruz.
     -->
-    {{ $ogImage := .Site.Params.header_image | absURL }}
-    {{ with .Params.image }}{{ $ogImage = . | absURL }}{{ end }}
+    {{ $ogImage := partial "webp-image.html" .Site.Params.header_image }}
+    {{ with .Params.image }}{{ $ogImage = partial "webp-image.html" . }}{{ end }}
     <meta property="og:image" content="{{ $ogImage }}">
     <meta name="twitter:image" content="{{ $ogImage }}">
     <meta name="twitter:card" content="summary_large_image">

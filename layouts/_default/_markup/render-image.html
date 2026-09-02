@@ -1,0 +1,30 @@
+{{- /*
+  Markdown içindeki ![alt](path) görsellerini render eden hook.
+  Yerel bir .jpg/.jpeg/.png ise resources.Get + .Process "webp" ile WebP'ye çevirir
+  (kaynak bulunamazsa/desteklenmeyen bir uzantıysa orijinal path'e düşer - build hiçbir
+  durumda kırılmaz). http(s) ile başlayan uzak görseller olduğu gibi bırakılır.
+*/ -}}
+{{- $dest := .Destination -}}
+{{- $src := $dest -}}
+{{- if not (or (hasPrefix $dest "http://") (hasPrefix $dest "https://")) -}}
+  {{- $resourcePath := $dest -}}
+  {{- if hasPrefix $dest "/" -}}
+    {{- $resourcePath = strings.TrimPrefix "/" $dest -}}
+  {{- end -}}
+  {{- $ext := path.Ext $resourcePath | lower -}}
+  {{- if or (eq $ext ".jpg") (eq $ext ".jpeg") (eq $ext ".png") -}}
+    {{- with resources.Get $resourcePath -}}
+      {{- with .Process "webp" -}}
+        {{- $src = .RelPermalink -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{ if .Title }}
+  <figure>
+    <img src="{{ $src | safeURL }}" alt="{{ .Text }}" loading="lazy">
+    <center><figcaption>{{ .Title }}</figcaption></center>
+  </figure>
+{{ else }}
+  <img src="{{ $src | safeURL }}" alt="{{ .Text }}" loading="lazy">
+{{ end }}
