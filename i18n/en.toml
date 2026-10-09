@@ -1,0 +1,20 @@
+[postedBy]
+other = "Posted by"
+[on]
+other = "on"
+[lastModified]
+other = "Last modified on"
+[previousPost]
+other = "Previous Post"
+[nextPost]
+other = "Next Post"
+[newerPosts]
+other = "Newer Posts"
+[olderPosts]
+other = "Older Posts"
+[featuredTags]
+other = "FEATURED TAGS"
+[search]
+other = "Search"
+[switchLanguage]
+other = "Bu sayfayı Türkçe oku"

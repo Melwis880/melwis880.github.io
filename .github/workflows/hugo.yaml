@@ -23,23 +23,26 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HUGO_VERSION: 0.165.0
+      # Hugo sürümü değişirse bunu da güncelle: release'teki hugo_<sürüm>_checksums.txt
+      HUGO_SHA256: b4fab4477743c0f1fcfe85072a71156d78f97e4724f0d8bb3b1b1ff2f53ce3ac
+      PAGEFIND_VERSION: 1.5.2
     steps:
       - name: Install Hugo CLI
         run: |
           wget -O ${{ runner.temp }}/hugo.deb \
             https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
+          echo "${HUGO_SHA256}  ${{ runner.temp }}/hugo.deb" | sha256sum -c -
           sudo dpkg -i ${{ runner.temp }}/hugo.deb
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          # NOT: hugo-theme-cleanwhite temanın kendisi ayrı bir git submodule'ü
-          # DEĞİL - dosyaları doğrudan bu repoda takip ediliyor (hand-patched
-          # tema, upstream ile senkron tutulmuyor). Bu yüzden submodules: true
-          # gerekmiyor.
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        # Varsayılan sığ klon (fetch-depth: 1) yeterli: enableGitInfo kullanılmıyor.
+        # enableGitInfo açılırsa buraya `with: fetch-depth: 0` geri eklenmeli.
+        # NOT: hugo-theme-cleanwhite ayrı bir git submodule'ü DEĞİL - dosyaları
+        # doğrudan bu repoda takip ediliyor (hand-patched tema), bu yüzden
+        # submodules: true gerekmiyor.
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - name: Build with Hugo
         env:
           HUGO_ENVIRONMENT: production
@@ -51,9 +54,9 @@ jobs:
             --cleanDestinationDir \
             --baseURL "${{ steps.pages.outputs.base_url }}/"
       - name: Build Pagefind search index
-        run: npx pagefind --site public
+        run: npx --yes pagefind@${PAGEFIND_VERSION} --site public
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: ./public
 
@@ -66,4 +69,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

@@ -6,6 +6,8 @@
         new PagefindUI({
             element: "#search",
             showSubResults: true,
+            {{- /* İngilizce sayfada Pagefind kendi varsayılan metinlerini kullanır. */}}
+            {{- if eq site.Language.Lang "tr" }}
             translations: {
                 placeholder: "Sitede ara...",
                 clear_search: "Temizle",
@@ -19,6 +21,7 @@
                 search_suggestion: "[SEARCH_TERM] için sonuç bulunamadı. Şunlardan birini deneyin:",
                 searching: "[SEARCH_TERM] için aranıyor..."
             }
+            {{- end }}
         });
     });
 </script>

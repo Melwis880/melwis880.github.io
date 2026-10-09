@@ -1,4 +1,4 @@
 ---
-title: "Ara"
-description: "Sitede arama yap."
+title: "Search"
+description: "Search the site."
 ---

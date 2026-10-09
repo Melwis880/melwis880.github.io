@@ -1,7 +1,7 @@
 {{ define "header" }}
 <style type="text/css">
     header.intro-header {
-        background-image: url('{{ if .Params.image }}{{ partial "webp-image.html" .Params.image | safeURL }}{{ else }}{{ partial "webp-image.html" .Site.Params.header_image | safeURL }}{{ end }}')
+        background-image: url('{{ if .Params.image }}{{ partial "webp-image.html" .Params.image | safeURL }}{{ else }}{{ partialCached "webp-image.html" .Site.Params.header_image .Site.Params.header_image | safeURL }}{{ end }}')
     }
 </style>
 {{ if eq .Params.headerstyle "text" }}
@@ -23,9 +23,9 @@
                     <h1>{{ .Title }}</h1>
                     <h2 class="subheading">{{ .Params.subtitle }}</h2>
                     <span class="meta">
-                        Posted by 
-                        {{ if .Params.author }}{{ .Params.author }}{{ else }}{{ .Site.Title }}{{ end }} 
-                        on {{ .Date.Format "Monday, January 2, 2006" }}
+                        {{ i18n "postedBy" }}
+                        {{ if .Params.author }}{{ .Params.author }}{{ else }}{{ .Site.Title }}{{ end }}
+                        {{ i18n "on" }} {{ .Date | time.Format ":date_full" }}
                     </span>
                 </div>
             </div>
@@ -116,7 +116,7 @@
                 {{ if .Site.Params.featured_tags }}
                 <section>
                     <hr class="hidden-sm hidden-xs">
-                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <h5><a href="{{ "tags/" | relLangURL }}">{{ i18n "featuredTags" }}</a></h5>
                     <div class="tags">
                         {{ $featured_condition_size := .Site.Params.featured_condition_size }}
                         {{ range $name, $taxonomy := .Site.Taxonomies.tags }}

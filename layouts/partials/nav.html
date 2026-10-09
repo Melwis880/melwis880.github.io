@@ -33,19 +33,36 @@
                                 </a>
                                 <ul class="dropdown-menu">
                                     {{ range .Children }}
-                                        <li><a href="{{ .URL | relLangURL }}">{{ .Name }}</a></li>
+                                        <li><a href="{{ .URL | relURL }}">{{ .Name }}</a></li>
                                     {{ end }}
                                 </ul>
                             </li>
                         {{ else }}
-                            <li><a href="{{ .URL | relLangURL }}">{{ .Name }}</a></li>
+                            <li><a href="{{ .URL | relURL }}">{{ .Name }}</a></li>
                         {{ end }}
                     {{ end }}
                     <li>
-                        <a href="{{ "search/" | relLangURL }}" aria-label="Ara" title="Ara">
+                        <a href="{{ "search/" | relLangURL }}" aria-label="{{ i18n "search" }}" title="{{ i18n "search" }}">
                             <i class="fa fa-search"></i>
                         </a>
                     </li>
+                    {{/* Dil değiştirme butonu: sayfanın diğer dildeki çevirisine gider,
+                         çevirisi yoksa o dilin ana sayfasına düşer. */}}
+                    {{ $page := . }}
+                    {{ range site.Home.AllTranslations }}
+                        {{ if ne .Language.Lang $page.Language.Lang }}
+                            {{ $lang := .Language.Lang }}
+                            {{ $target := .RelPermalink }}
+                            {{ range $page.Translations }}
+                                {{ if eq .Language.Lang $lang }}{{ $target = .RelPermalink }}{{ end }}
+                            {{ end }}
+                            <li class="lang-switch">
+                                <a href="{{ $target }}" hreflang="{{ $lang }}" lang="{{ $lang }}" title="{{ i18n "switchLanguage" }}" aria-label="{{ i18n "switchLanguage" }}">
+                                    <i class="fa fa-globe"></i> {{ upper $lang }}
+                                </a>
+                            </li>
+                        {{ end }}
+                    {{ end }}
                 </ul>
             </div>
         </div>

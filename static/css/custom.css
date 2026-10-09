@@ -248,3 +248,23 @@ header.intro-header .post-heading .subheading {
 
 
 
+
+/* --- DİL DEĞİŞTİRME BUTONU (EN / TR) --- */
+.navbar-custom .nav li.lang-switch a {
+    border: 1px solid currentColor;
+    border-radius: 14px;
+    padding: 4px 12px !important;
+    margin-top: 16px;
+    margin-left: 6px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+.navbar-custom .nav li.lang-switch a::after {
+    display: none;
+}
+@media (max-width: 767px) {
+    .navbar-custom .nav li.lang-switch a {
+        display: inline-block;
+        margin: 8px 15px;
+    }
+}

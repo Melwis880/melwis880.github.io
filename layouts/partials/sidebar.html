@@ -18,7 +18,7 @@
 	<!--<hr><h5><a href="{{ "/about" | relLangURL }}">ABOUT ME</a></h5>-->
         <div class="short-about">
             {{ with .Site.Params.sidebar_avatar }}
-            <a href="{{ "/about" | relLangURL }}">
+            <a href="{{ with site.GetPage "/hakkimda" }}{{ .RelPermalink }}{{ end }}">
                <img src="{{ . | relURL }}" alt="avatar" style="cursor: pointer" />
             </a>
             {{ end }}
@@ -227,7 +227,7 @@
     {{ if .Site.Params.featured_tags }}
     <section>
         <hr class="hidden-sm hidden-xs">
-        <h5>FEATURED TAGS</h5>
+        <h5>{{ i18n "featuredTags" }}</h5>
         <div class="tags">
             {{ $featured_condition_size := .Site.Params.featured_condition_size }}
             {{ range $name, $taxonomy := .Site.Taxonomies.tags }}
@@ -271,7 +271,7 @@
         <hr class="hidden-sm hidden-xs">
         <h5>{{ .Site.Params.last_posts_title | default `LAST POSTS` }}</h5>
         <ul>
-        {{ range ((where (where .Site.Pages "Type" "post") "IsPage" true).Limit (.Site.Params.last_posts_count | default 5 | int)) }}
+        {{ range first (.Site.Params.last_posts_count | default 5 | int) (where .Site.RegularPages "Type" "post") }}
             <li><a href="{{ .RelPermalink }}">{{.Title}}</a></li>
         {{ end }}
         </ul>

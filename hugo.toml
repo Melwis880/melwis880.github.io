@@ -1,7 +1,11 @@
 baseURL = "https://melwis880.github.io/"
-title = "M.Meriç Blog"
+title = "M. Meriç Ordu"
 theme = "hugo-theme-cleanwhite"
-locale = "tr-TR"
+
+# İki dilli site: İngilizce kök adreste (/), Türkçe /tr/ altında. Dil başına
+# değişen başlık, slogan, SEO metinleri ve menüler aşağıdaki [languages] bloğunda.
+defaultContentLanguage = "en"
+defaultContentLanguageInSubdir = false
 preserveTaxonomyNames = true
 hasCJKLanguage = false
 
@@ -54,20 +58,15 @@ home = ["HTML", "RSS"]
 
   custom_css = ["css/custom.css"]
 
-  sidebar = true  # Bu satırı ekle
+  sidebar = true
 
 
   header_image = "img/head_image1.jpg"
-  SEOTitle = "Meriç'in Bloğu | Kişisel Blog"
-  description = "Teknoloji, açık kaynak yazılımlar, siber güvenlik ve web geliştirme üzerine kişisel notlar ve rehberler."
-  keyword = "Meriç, Blog, Teknoloji, Açık Kaynak, Linux , Veri Yapıları , Siber Güvenlik"
-  slogan = "Merak ettiklerim, çözdüklerim ve paylaştıklarım."
   upstreamAttribution = true
   archive_title = " "
   
 
   image_404 = "img/404-bg.jpg"
-  title_404 = "Aradığınız sayfa bulunamadı :("
   omit_categories = true
 
   # leancloud storage for page view counter
@@ -76,8 +75,7 @@ home = ["HTML", "RSS"]
   leancloud_app_key = ""
 
   # Sidebar settings
-  sidebar_about_description = "Teknoloji, açık kaynak ve siber güvenlik meraklısı. Öğrenmek ve paylaşmak için buradayım."
-  #sidebar_avatar = "img/avatar.Meric.png"      # use absolute URL, seeing it's used in both `/` and `/about/`
+  sidebar_avatar = "img/profil-buyuk.png"      # use absolute URL, seeing it's used in both `/` and `/about/`
 
   featured_tags = true 
   featured_condition_size = 1 
@@ -110,7 +108,6 @@ home = ["HTML", "RSS"]
 
   # Last posts
   last_posts = true
-  last_posts_title = "SON YAZILAR"
   #last_posts_count = 5
 
   # Include any custom CSS and/or JS files, url or relative to /static folder
@@ -122,7 +119,7 @@ home = ["HTML", "RSS"]
   email          = "muharremmeric.ordu@gmail.com"
   #facebook      = "full profile url in facebook"
   #googleplus    = "full profile url in googleplus"
-  #twitter       = "full profile url in twitter"
+  twitter        = "https://x.com/atlas_tabip"
   linkedin       = "https://www.linkedin.com/in/mericordu"
   #stackoverflow  = "https://stackoverflow.com/users/yourstackoverflowid"
   #instagram     = "full profile url in instagram"
@@ -138,58 +135,68 @@ home = ["HTML", "RSS"]
   #xing          = "https://www.xing.com/profile/yourxingid"
   #git           = "full profile url for git user"
   
-# --- ANA MENÜ ÖĞELERİ ---
+# --- DİLLER VE MENÜLER ---
+# Menü URL'leri dil önekiyle birlikte tam yazılır (nav.html bunları relURL ile basar),
+# böylece /kart/ gibi tek dilli statik sayfalar /tr/kart/ olarak bozulmaz.
 
-[[menu.main]]
-    name = "ANASAYFA"
-    url = "/"
+[languages]
+  [languages.en]
+    label = "English"
+    locale = "en-US"
     weight = 1
+    [languages.en.params]
+      SEOTitle = "AI Automation Consultant"
+      description = "AI Automation Consultant and Computer Engineering student. Case studies on n8n, API and LLM automations that take manual work off small businesses and professionals."
+      keyword = "M. Meriç Ordu, AI automation, AI consultant, n8n, LLM, AI agents, Python, Claude Code, SME automation"
+      slogan = "Bringing ideas to life with AI."
+      sidebar_about_description = "AI Automation Consultant | Computer Engineering Student. I build n8n, API and LLM automations that take repetitive work off small teams."
+      last_posts_title = "RECENT POSTS"
+      title_404 = "The page you are looking for does not exist :("
+    [[languages.en.menus.main]]
+      name = "HOME"
+      url = "/"
+      weight = 1
+    [[languages.en.menus.main]]
+      name = "PROJECTS"
+      url = "/projects/"
+      weight = 2
+    [[languages.en.menus.main]]
+      name = "ABOUT"
+      url = "/about/"
+      weight = 3
+    [[languages.en.menus.main]]
+      name = "CARD"
+      url = "/kart/"
+      weight = 4
 
-[[menu.main]]
-    name = "HAKKIMDA"
-    url = "/hakkimda/"
+  [languages.tr]
+    label = "Türkçe"
+    locale = "tr-TR"
     weight = 2
-
-# PROGRAMLAMA DİLLERİ VE ALT MENÜLERİ
-[[menu.main]]
-    name = "PROGRAMLAMA DİLLERİ"
-    identifier = "prog"
-    url = "/categories/programlama-dilleri/"
-    weight = 3
-
-[[menu.main]]
-    name = "C"
-    parent = "prog"
-    url = "/categories/c/"
-    weight = 1
-
-[[menu.main]]
-    name = "PYTHON"
-    parent = "prog"
-    url = "/categories/python/"
-    weight = 2
-
-# SİBER GÜVENLİK VE ALT MENÜLERİ
-[[menu.main]]
-    name = "SİBER GÜVENLİK"
-    identifier = "cyber"
-    url = "/categories/siber-guvenlik/"
-    weight = 4
-
-[[menu.main]]
-    name = "SIZMA TESTİ"
-    parent = "cyber"
-    url = "/categories/sizma-testi/"
-    weight = 1
-
-[[menu.main]]
-    name = "ADLİ BİLİŞİM"
-    parent = "cyber"
-    url = "/categories/adli-bilisim/"
-    weight = 2
-
-
-
+    [languages.tr.params]
+      SEOTitle = "Yapay Zeka Otomasyon Danışmanı"
+      description = "Yapay zeka otomasyon danışmanı ve Bilgisayar Mühendisliği öğrencisi. KOBİ'lerin ve profesyonellerin elle yaptığı işleri azaltan n8n, API ve LLM otomasyonları üzerine vaka analizleri."
+      keyword = "M. Meriç Ordu, yapay zeka otomasyonu, yapay zeka danışmanı, n8n, LLM, yapay zeka ajanları, Python, Claude Code, KOBİ otomasyonu"
+      slogan = "Fikirleri yapay zekayla hayata geçirmek."
+      sidebar_about_description = "Yapay Zeka Otomasyon Danışmanı | Bilgisayar Mühendisliği Öğrencisi. Küçük ekiplerin tekrar eden işlerini n8n, API ve LLM otomasyonlarıyla üstleniyorum."
+      last_posts_title = "SON YAZILAR"
+      title_404 = "Aradığınız sayfa bulunamadı :("
+    [[languages.tr.menus.main]]
+      name = "ANASAYFA"
+      url = "/tr/"
+      weight = 1
+    [[languages.tr.menus.main]]
+      name = "PROJELER"
+      url = "/tr/projeler/"
+      weight = 2
+    [[languages.tr.menus.main]]
+      name = "HAKKIMDA"
+      url = "/tr/hakkimda/"
+      weight = 3
+    [[languages.tr.menus.main]]
+      name = "KARTVİZİT"
+      url = "/kart/"
+      weight = 4
 
 
 [markup]
@@ -199,6 +206,12 @@ home = ["HTML", "RSS"]
   [markup.highlight]
     style = "dracula"
   [markup.goldmark]
+    # Çok dilli sitelerde Hugo'nun gömülü link render hook'u otomatik açılıyor ve
+    # /kart/ gibi static/ altındaki (aynı zamanda assets olarak mount edilen) klasörlere
+    # verilen linkleri kaynak olarak yayınlamaya çalışıp build'i kırıyor. İçerikteki
+    # linkler zaten dil önekiyle tam yazılıyor, o yüzden kapalı.
+    [markup.goldmark.renderHooks.link]
+      useEmbedded = "never"
     [markup.goldmark.renderer]
       unsafe = false
     [markup.goldmark.extensions]
