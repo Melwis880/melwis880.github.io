@@ -2,7 +2,7 @@
 <header class="site-header">
   <div class="container">
     <a class="brand" href="{{ "/" | relLangURL }}">
-      {{- with site.Params.sidebar_avatar }}{{ with resources.Get . }}
+      {{- with site.Params.avatar }}{{ with resources.Get . }}
       {{- $avatar := .Fill "96x96 webp Center q85" }}
       <img class="avatar" src="{{ $avatar.RelPermalink }}" width="48" height="48" alt="">
       {{- end }}{{ end }}

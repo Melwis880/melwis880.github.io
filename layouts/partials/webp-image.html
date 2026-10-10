@@ -9,8 +9,8 @@
   bulunamıyorsa/desteklenmeyen bir uzantıysa, orijinal path'in mutlak hali döner -
   build hiçbir durumda kırılmaz.
 
-  Not: resources.Get'in çalışabilmesi için static/'in hugo.toml'de [[module.mounts]]
-  ile assets/ olarak da mount edilmiş olması gerekir.
+  Not: resources.Get sadece assets/ altına bakar; görsel assets/img/ içinde olmalı.
+  static/ altındaki bir görsel bulunamaz ve orijinal path döner (WebP'ye çevrilmez).
 
   Kullanım: {{ partial "webp-image.html" "img/head_image1.jpg" | safeURL }}
 */ -}}

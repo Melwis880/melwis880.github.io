@@ -37,9 +37,8 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         # Varsayılan sığ klon (fetch-depth: 1) yeterli: enableGitInfo kullanılmıyor.
         # enableGitInfo açılırsa buraya `with: fetch-depth: 0` geri eklenmeli.
-        # NOT: hugo-theme-cleanwhite ayrı bir git submodule'ü DEĞİL - dosyaları
-        # doğrudan bu repoda takip ediliyor (hand-patched tema), bu yüzden
-        # submodules: true gerekmiyor.
+        # Tema yok (hugo-theme-cleanwhite 2026-10-10'da kaldırıldı), bütün layout'lar
+        # bu repoda; submodules: true gerekmiyor.
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5

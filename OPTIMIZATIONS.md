@@ -1,201 +1,212 @@
 # OPTIMIZATIONS.md
 
-> Kapsam: iki dilli (EN `/`, TR `/tr/`) Hugo sitesi, vendored + elle yamalı `hugo-theme-cleanwhite` teması, `/kart/` statik kartvizit sayfası ve GitHub Actions deploy hattı.
-> Yöntem: `hugo --gc --minify --cleanDestinationDir --templateMetrics` ile gerçek build alındı, üretilen `public/` çıktısı tarandı, git paket boyutu ve EXIF verisi ölçüldü. Rakamlar aksi belirtilmedikçe ölçülmüş değerlerdir.
-> Tarih: 2026-10-09. Kaynak dosyalara dokunulmadı (bu dosya hariç). 2025-08-21 tarihli önceki denetimin yerini alır; eski bulguların durumu en altta.
+> Kapsam: `redesign` dalı (c0f1e7f). İki dilli Hugo sitesi (EN `/`, TR `/tr/`), site seviyesindeki yeni layout'lar, hâlâ `theme =` ile yüklenen vendored `hugo-theme-cleanwhite`, `/kart/`, Pagefind araması ve GitHub Actions deploy hattı.
+> Yöntem: `hugo --gc --minify --cleanDestinationDir --templateMetrics --templateMetricsHints` ile gerçek build alındı, `public/` içindeki her dosyanın üretilen HTML/XML/CSS içinde referans alıp almadığı tarandı, bundle boyutları gzip ile ölçüldü. Rakamlar aksi belirtilmedikçe ölçülmüş değerlerdir.
+> Tarih: 2026-10-10. Kaynak dosyalara dokunulmadı (bu dosya hariç). 2026-10-09 tarihli denetimin yerini alır; redesign'dan önceki bulguların çoğu artık geçersiz, durumları en altta.
 
-> **Uygulandı (2026-10-09, commit edilmedi):** B1 (avatar 540x486, EXIF yok, 1.7 MB → 102 KB; yaprak dokusu yüzünden tahmin edilen 30-50 KB'tan büyük), B3.1, B5, B8 (`baseof.html` ve `_default/post.html` dahil; `webp-image` çağrılarının %94'ü cache'ten geliyor), B9, B12, B2'den sadece `manzara1.JPG`. Build çıktısı 11 MB → 5.6 MB, build uyarısız. Diğer 8 görsel ve B3.2, B4, B6, B7, B10, B11, B13 açık.
+
+## Durum (2026-10-10, yayın öncesi temizlik oturumu)
+
+| Bulgu | Durum | Not |
+|---|---|---|
+| O1 | **Uygulandı** | Tema kaldırıldı (`theme =` satırı + `themes/`, 173 dosya, 8.3 MB), `static/img/` altındaki 10 ölü görsel ve `static/css/custom.css` silindi, `head_image1.jpg` ile `profil-buyuk.png` `assets/img/`'e taşındı |
+| O2 | **Uygulandı** | `passthrough` bloğu kaldırıldı; tema gidince math/chem/mermaid hook'ları da gitti |
+| O3 | **Uygulandı** | `layouts/partials/webp-image.html` site seviyesinde |
+| O4 | **Uygulandı** | `favicon.ico` 16+32 px, 72,398 → 5,238 byte (aynı görsel). `apple-touch-icon` eklenmedi. `/kart/` kendi favicon'unu tanımlamadığı için tarayıcı hâlâ `/favicon.ico` isteyip 404 alıyor (önceden de böyleydi) |
+| O5 | Ertelendi | Hakkımda sayfası 2. aşamada baştan yazılacak |
+| O6 | **Uygulandı** | 36 ölü ayar ve yorum blokları silindi, `[module]` bloğu kaldırıldı (`static -> assets` mount'u dahil), `sidebar_avatar` → `avatar`. `useEmbedded = "never"` bilerek kaldı. CLAUDE.md düzeltildi |
+| O7 | Kısmen | `page.html` 2. aşamadaki Hakkımda/Projeler şablonları için kaldı; avatar ve önceki/sonraki tekrarı açık |
+| O8 | Ertelendi | Sitemap'te `/search/` sonraya kaldı |
+| O9, O11 | Açık | Düşük öncelik |
+| O10 | Ertelendi | Paylaşım kartları / og:image biçimi 3. aşamada |
+| O12 | Ertelendi | CI önbelleği sonraya kaldı; tema gidince checkout zaten ~8 MB küçüldü |
+
+**Ölçüm (sonra):** `public/` 5,158,364 → **633,946 byte** (%87.7 azalma), 146 → **75 dosya**, build uyarısız. Önce/sonra `diff -r`: tüm HTML/XML/CSS/JS byte byte aynı, değişen tek ortak dosya `favicon.ico`. İç link kontrolü: 97 yerel yol, 0 eksik. 10 sayfa türü x 2 dil + `/kart/` + açık tema + mobil + başlık araması (26 görüntü) piksel piksel aynı; Pagefind 1.5.2 ile arama iki dilde çalışıyor, CSP ihlali yok.
 
 ---
 
 ## 1) Optimization Summary
 
-Site küçük: 61 sayfa (31 EN + 30 TR), build süresi **286 ms**, build uyarısız, çıktı **11 MB / 160 dosya**. Ağustos denetimindeki büyük sorunlar (199 MB'lık `public/` birikintisi, 2.4 MB header görseli, FastClick, `deploy.sh`) çözülmüş. Build süresi bir sorun değil. Kalan sorunlar **ziyaretçiye giden gereksiz byte'lar**, **deploy'a giren ölü dosyalar** ve **CI'ın her seferinde çektiği 42.8 MB'lık git geçmişi**.
+Redesign sonrası sayfa başına yük çok iyi: her sayfa **3 istek** (HTML + 5.1 KB gzip CSS + 2.5 KB gzip JS + 160 B tema-init), jQuery/Bootstrap/Font Awesome tamamen gitti, build **203 ms** ve uyarısız. Çalışma zamanı performansında ciddi bir sorun yok. Sorunlar artık **deploy'a giren ölü dosyalar**, **tema klasörünün hâlâ aktif olan görünmez parçaları** ve birkaç küçük sayfa kalitesi (CLS, favicon) konusunda.
 
 **En yüksek etkili 3 iyileştirme:**
-1. `/kart/` sayfasındaki 160 px'lik avatar için **1.7 MB, 2533x2281 piksel JPEG** iniyor (telefon EXIF'iyle birlikte). Kartvizit QR'dan, yani mobil veriyle açılan sayfa. ~480 px'e küçültünce ~%97 tasarruf.
-2. `static/img/` içinde **hiçbir yerden referans edilmeyen 9 dosya (~4.7 MB)** var. Bunlardan `manzara1.JPG` (3.4 MB, Canon EXIF + GPS bloğu) `https://melwis880.github.io/img/manzara1.JPG` adresinden herkese açık yayında.
-3. Her sayfanın `<head>` kısmında **4 adet senkron (render-blocking) script** (~129 KB ham / ~43 KB gzip) ve **5 CSS** (~197 KB ham / ~39 KB gzip) var. Bunlardan `lazysizes.min.js` ve `zanshang.min.css` sitede hiç kullanılmıyor.
+1. **Build çıktısının %86'sı ölü.** `public/` 5.16 MB, bunun **4.46 MB'ı (71 dosya)** hiçbir sayfadan referans almıyor: temanın `static/` klasörü (3.08 MB: Bootstrap, jQuery, FA v4/v5 fontları, iDisqus, kityminder, ödeme QR'ları) ve `static/img/` içindeki 10 eski görsel (1.27 MB). Hepsi her deploy'da herkese açık URL olarak yayında.
+2. **Temanın render hook'ları hâlâ devrede.** `render-passthrough.html` + `passthrough` uzantısı açık: düz metinde eşleşmiş bir `\( ... \)` geçerse KaTeX'e gönderiliyor, geçersizse `errorf` ile **build kırılıyor**; geçerliyse KaTeX CSS'i yüklenmediği için formül iki kez görünüyor. Mermaid bloğu da JS olmadan ham metin olarak kalıyor.
+3. **`favicon.ico` 72 KB**: ilk ziyarette inen en büyük tek dosya. Bir yazı sayfasının HTML + CSS + JS toplamından (~11 KB gzip) büyük.
 
-**Hiçbir şey değişmezse en büyük risk:** Mobil ziyaretçilerde (özellikle `/kart/` QR akışında) yavaş ilk açılış, ve CLAUDE.md'deki "`static/img/` sadece referans edilen görselleri içerir" kuralının sessizce çiğnenmeye devam etmesi. Yayındaki fazla dosyalar, fotoğraf meta verisini de (kamera/telefon modeli, çekim tarihi) dışarı sızdırıyor.
+**Hiçbir şey değişmezse en büyük risk:** Biri teknik bir yazıda kod bloğu dışında `\(` kullandığında CI'ın sebebi belirsiz bir KaTeX hatasıyla kırılması. İkincisi, ölü tema dosyalarının (bilinen açıkları olan eski jQuery 1.x/Bootstrap 3 kopyaları dahil) sitenin alan adında yayında kalmaya devam etmesi.
 
 ---
 
 ## 2) Findings (Prioritized)
 
-### B1. `/kart/` avatarı 1.7 MB, ekranda 160 px
-- **Category:** Frontend / Network
+### O1. (UYGULANDI) Build çıktısının 4.46 MB'ı (71 dosya, %86) ölü
+- **Category:** Build / Cost / Dead Code
 - **Severity:** High
-- **Impact:** `/kart/` LCP süresi, mobil veri kullanımı
-- **Evidence:** `static/kart/business_foto1.jpg`: 1,740,942 byte, 2533x2281, baseline JPEG. EXIF içinde `Make=HONOR`, `Model=DNY-NX9`, `DateTimeOriginal=2026:05:29 18:10:47` var. Kullanıldığı yer `static/kart/kart.css` içindeki `.avatar-photo{background-image:url(business_foto1.jpg);background-size:145%}`. Element boyutu `w-36 h-36 sm:w-40 sm:h-40` (`static/kart/index.html:38`), yani en fazla 160 px. %145 bg-size ile ~232 px genişlik, 2x ekranda ~464 px yeterli.
-- **Why it's inefficient:** Gereken piksel sayısının ~27 katı indiriliyor. Sayfadaki diğer her şey (HTML 6 KB, CSS 10 KB, JS 1 KB, QR 6 KB) toplamda ~23 KB. Yani sayfa ağırlığının ~%99'u bu tek görsel.
-- **Recommended fix:** Görseli ~480x480'e kırp/küçült, EXIF'i sil, kaliteyi ~80 yap. **Dosya adını aynı tut** ki önceden derlenmiş `kart.css` değişmesin (Tailwind kaynağı yok, bkz. CLAUDE.md). Örnek komutlar Bölüm 6'da.
-- **Tradeoffs / Risks:** `background-position:center 22%` ve `background-size:145%` orijinal en/boy oranına göre ayarlanmış. Kırparken oranı (~1.11:1) koru ya da sadece ölçekle. Görsel olarak kontrol et.
-- **Expected impact estimate:** 1.7 MB → ~30-50 KB (~%97 azalma). Sayfa toplamı ~1.76 MB → ~70 KB.
-- **Removal Safety:** Safe (dosya yerinde değişir, referans aynı kalır). Orijinali repo dışında sakla.
+- **Impact:** Deploy artifact boyutu, herkese açık gereksiz URL'ler, CI upload süresi
+- **Evidence:** Üretilen HTML/XML içinde referans alan yerel varlıklar sadece şunlar: `css/site.min.*.css`, `js/site.min.*.js`, `js/theme-init.min.*.js`, `img/favicon.ico`, 3 adet `*_hu_*.webp` (avatar 2 boyut + og:image) ve `/kart/` dosyaları. `public/css`, `public/js`, `public/webfonts`, `public/img` altındaki geri kalan her şey ölü:
+
+  | Kaynak | Dosya | Boyut | Not |
+  |---|---|---|---|
+  | `themes/hugo-theme-cleanwhite/static/` | 61 | 3,080,569 | `theme =` satırı yüzünden kopyalanıyor. Temanın `head.html`/`footer.html`'i artık render edilmiyor, yani bu dosyaları yükleyen hiçbir şey yok |
+  | `static/img/` (10 dosya) | 10 | 1,265,257 | `post.png`, `home-bg-jeep.jpg`, `contact-bg.jpg`, `404-bg.jpg`, `post-bg-coffee.jpeg`, `post-bg-unix-linux.jpg`, `tag-bg.jpg`, `disqus.png`, `favicon.png`, `search.png` |
+  | `static/css/custom.css` | 1 | 7,017 | Sadece temanın `head.html`'i (`params.custom_css`) yüklüyordu; o şablon artık çalışmıyor. İçeriği eski navbar sınıfları (`.navbar-custom`) |
+  | `static/img/head_image1.jpg`, `profil-buyuk.png` | 2 | 168,165 | Sadece `resources.Get` kaynağı olarak gerekli; çıktıdaki kopyalarına link yok, WebP türevleri kullanılıyor |
+
+  Ayrıca temanın `exampleSite/` (2.5 MB) ve `images/` (2.4 MB) klasörleri build'e girmiyor ama her CI checkout'unda iniyor.
+- **Why it's inefficient:** Hugo `static/` (sitenin ve temanın) altındaki her şeyi koşulsuz kopyalıyor. Ziyaretçi bunları indirmiyor ama artifact'in 6'da 5'i çöp; eski `jquery.js` 1.x / Bootstrap 3 kopyaları güvenlik tarayıcılarında "bilinen açıklı kütüphane barındırıyor" uyarısı üretir. CLAUDE.md'deki "`static/img/` sadece referans edilen görselleri içerir" kuralı da çiğneniyor.
+- **Recommended fix (üç adım, her biri bağımsız):**
+  1. **Tema static'ini kes (silme yok):** Tema bağımlılığını sadece layout'larla sınırla. `hugo.toml`'da `theme = "hugo-theme-cleanwhite"` yerine:
+     ```toml
+     [[module.imports]]
+       path = "hugo-theme-cleanwhite"
+       [[module.imports.mounts]]
+         source = "layouts"
+         target = "layouts"
+     ```
+     Ya da planlanan tema kaldırma adımının ilk yarısı olarak: `webp-image.html`'i `layouts/partials/`'a kopyala (O3'e bak), sonra `theme =` satırını kaldır. Bu ikinci yol CLAUDE.md'ye göre **açık "evet" gerektiriyor**.
+  2. **Site static'indeki 10 ölü görseli ve `custom.css`'i sil** (açık "evet" ile). `hugo.toml`'daki `custom_css` ve `image_404` anahtarları da onlarla gider (O6).
+  3. **Sadece kaynak olan görselleri `assets/img/`'e taşı** (`head_image1.jpg`, `profil-buyuk.png`; taşıma için açık "evet"). `resources.Get "img/..."` yolu aynı kalır. Bu yapılınca `static -> assets` mount'una ihtiyaç kalıp kalmadığı ayrıca değerlendirilebilir (bkz. Deeper #3).
+- **Tradeoffs / Risks:** Adım 1'de tema shortcode'ları (`figure`, `notice`, `gallery`...) layout mount'unda kaldığı için hâlâ kullanılabilir; `theme =` kaldırılırsa onlar da gider (içerikte şu an hiç shortcode yok, `grep '{{[<%]' content` boş). Adım 3'te `content/hakkimda/index*.md` içindeki `/img/profil-buyuk.png` linki `render-image.html` üzerinden `resources.Get` ile çözüldüğü için çalışmaya devam eder, ama bulunamazsa hook sessizce orijinal yola düşer ve 404 verir: build sonrası kontrol et.
+- **Expected impact estimate:** `public/` 5.16 MB → ~0.7 MB (~%86 azalma), dosya sayısı 146 → ~75. CI artifact upload'u buna oranla kısalır.
+- **Removal Safety:** Adım 1 (mount): Likely Safe. Adım 2: Safe (referans taraması temiz). Adım 3: Needs Verification.
+- **Reuse Scope:** site-wide / CI
+
+### O2. (UYGULANDI) Temanın render hook'ları ve `passthrough` uzantısı görünmez şekilde aktif
+- **Category:** Reliability / Dead Code
+- **Severity:** Medium
+- **Impact:** Build kırılması riski, bozuk görünen içerik
+- **Evidence:** Site seviyesinde karşılığı olmayan, bu yüzden hâlâ temadan gelen hook'lar: `_markup/render-passthrough.html`, `render-codeblock-math.html`, `render-codeblock-chem.html` (hepsi `transform.ToMath`, hata durumunda `errorf`), `render-codeblock-mermaid.html` (`<pre class="mermaid">` basar). `hugo.toml`'da `passthrough` açık, sınırlayıcılar `\[ \]`, `$$ $$` ve satır içi `\( \)`. KaTeX CSS'ini ve Mermaid JS'ini yükleyen tema `head.html`/`footer.html`'i artık render edilmiyor; site CSP'si (`style-src 'self'`, `script-src 'self'`) zaten CDN'den yüklemeye izin vermez.
+- **Why it's inefficient:** Sonuçlar: (a) kod span'ı dışındaki `\(...\)` metni (regex anlatan bir yazıda olası) TeX olarak ayrıştırılır, geçersizse **build durur**; (b) geçerliyse `htmlAndMathml` çıktısı CSS'siz basılır, formül hem HTML hem MathML olarak iki kez görünür; (c) ` ```mermaid ` bloğu çizim yerine ham metin gösterir ve normal kod bloklarındaki Kopyala butonu/vurgulama da almaz. İçerikte şu an bunlardan hiçbiri yok, yani bu tamamen ölü ama tetiklenmeye hazır davranış.
+- **Recommended fix:** Matematik kullanılmıyorsa `[markup.goldmark.extensions.passthrough] enable = false` yap (o bloğu sil). Math/mermaid code-block hook'larını etkisizleştirmek için ya temayı kaldır (O1 adım 1'deki `theme =` yolu) ya da site seviyesinde onları normal kod bloğu gibi basan hook'lar ekle. Matematik ileride gerekirse: `transform.ToMath` + yerel (assets'ten, fingerprint'li) KaTeX CSS'i, sadece `.Page.Store.Get "hasMath"` olan sayfalarda.
+- **Tradeoffs / Risks:** Yok denecek kadar az; içerikte kullanımı yok.
+- **Expected impact estimate:** Performans etkisi yok; bir sınıf build hatasını ortadan kaldırır.
+- **Removal Safety:** Safe (passthrough kapatma), Likely Safe (hook'lar)
+- **Reuse Scope:** site-wide (markup)
+
+### O3. (UYGULANDI) Tema yalnızca tek bir partial için yükleniyor
+- **Category:** Maintainability / Over-Abstracted Code
+- **Severity:** Medium
+- **Impact:** O1 ve O2'nin kök nedeni; şablon çakışmaları
+- **Evidence:** Site layout'larının temadan kullandığı tek şey `partials/webp-image.html` (`layouts/partials/site/head.html` og:image). Tema `i18n/` içermiyor, içerikte tema shortcode'u yok. Buna karşın tema 44 layout dosyası sağlıyor ve bunlardan bazıları siteyi sessizce etkiliyor: O2'deki hook'lar ve `_default/page.html` (sitenin `_default/page.html`'i, temanınkini gölgelemek için `_default/single.html`'in birebir kopyası olarak durmak zorunda, bkz. O5). CLAUDE.md'deki "the site still uses the theme's ... shortcodes" ifadesi artık doğru değil.
+- **Why it's inefficient:** Görünmez bir fallback katmanı: site seviyesinde bir şablon eksik kalırsa (ya da silinirse) hata yerine Bootstrap/jQuery'ye bağlı eski tema şablonu render edilir ve CSP'yi ihlal eden sayfa çıkar.
+- **Recommended fix:** `themes/hugo-theme-cleanwhite/layouts/partials/webp-image.html` dosyasını `layouts/partials/webp-image.html` olarak **kopyala** (site seviyesi override; davranış aynı, risk yok). Bu yapıldıktan sonra tema kaldırma adımı tek satırlık bir config değişikliğine iner. Kaldırmanın kendisi CLAUDE.md'ye göre ayrı bir adım ve **açık "evet" ister**.
+- **Tradeoffs / Risks:** Kopyalama sıfır risk. Tema kaldırıldıktan sonra `hugo.toml`'daki `[mediaTypes]` woff blokları ve tema parametreleri de ölü olur (O6).
+- **Expected impact estimate:** O1 adım 1 + O2'nin tamamı tek hamlede çözülür; checkout'tan ~8 MB tema dosyası düşer.
+- **Removal Safety:** Kopyalama: Safe. Tema kaldırma: Needs Verification (build + çıktı diff'i).
+- **Reuse Scope:** site-wide
+
+### O4. (UYGULANDI) `favicon.ico` 72 KB; ilk ziyaretteki en büyük dosya
+- **Category:** Frontend / Network
+- **Severity:** Medium
+- **Impact:** İlk ziyaret transfer boyutu, özellikle mobil (`/kart/` QR akışı ayrıca kendi faviconunu tanımlamıyor, tarayıcı `/favicon.ico` arar)
+- **Evidence:** `static/img/favicon.ico`: 72,398 byte, tek ikon, 132x132, 32 bpp (`file` çıktısı). Her sayfada `<link rel="icon" href="/img/favicon.ico">`. Karşılaştırma: `/post/flx-case-study/` HTML 13.9 KB ham, CSS 5.1 KB gzip, JS 2.5 KB gzip. `apple-touch-icon` tanımlı değil; iOS `/apple-touch-icon.png` isteyip 404 alır.
+- **Why it's inefficient:** Tarayıcı sekme ikonu için 16/32 px gösteriyor; 132 px 32-bit bitmap yaklaşık 15-20 katı veri.
+- **Recommended fix:** 16+32 px'lik çok boyutlu bir `favicon.ico` (~5 KB) üret, aynı yolda değiştir. İsteğe bağlı: 180x180 `apple-touch-icon.png` ekle ve `head.html`'e `<link rel="apple-touch-icon" ...>` koy. Komut Bölüm 6'da.
+- **Tradeoffs / Risks:** Yok. Görsel olarak kontrol et.
+- **Expected impact estimate:** ~72 KB → ~5 KB (~%93). İlk ziyaret toplamı yazı sayfasında ~95 KB → ~28 KB.
+- **Removal Safety:** Safe (aynı dosya adı)
 - **Reuse Scope:** local file
 
-### B2. `static/img/` içinde referanssız 9 dosya (~4.7 MB), biri GPS bloklu 3.4 MB fotoğraf
-- **Category:** Cost / Build / Dead Code
-- **Severity:** High
-- **Impact:** Deploy boyutu, herkese açık gereksiz URL'ler, meta veri sızıntısı
-- **Evidence:** `content/`, `layouts/`, `hugo.toml`, `static/css` ve tema layout'ları tam dosya adıyla tarandı (tema `exampleSite/` ve `README.md` hariç). Hiç referans edilmeyenler:
-
-  | Dosya | Boyut | Not |
-  |---|---|---|
-  | `manzara1.JPG` | 3,426,818 | 5184x3456, Canon EOS 650D EXIF, `GPSVersionID` var (koordinat yok) |
-  | `post.png` | 310,336 | sadece tema README'sinde geçiyor |
-  | `home-bg-jeep.jpg` | 274,543 | sadece tema exampleSite'ta |
-  | `contact-bg.jpg` | 226,472 | |
-  | `post-bg-coffee.jpeg` | 113,000 | |
-  | `post-bg-unix-linux.jpg` | 91,217 | |
-  | `tag-bg.jpg` | 83,785 | |
-  | `disqus.png` | 19,329 | sadece tema README'sinde |
-  | `search.png` | 3,171 | sadece tema README'sinde |
-
-  Ayrıca `favicon.png` sadece `reward.html` partial'ında kullanılıyor ve `reward = false`; Needs Verification.
-- **Why it's inefficient:** Hugo `static/` altındaki her şeyi yayına kopyalıyor. CLAUDE.md bu klasörün sadece referans edilen görselleri içermesini açıkça istiyor.
-- **Recommended fix:** Listeyi kaldır. **Silme işlemi global kural gereği açık "evet" ister**, bu denetim hiçbir şey silmedi. `manzara1.JPG` ileride kullanılacaksa küçültülmüş ve EXIF'i temizlenmiş bir kopyasını bir sayfa paketine (page bundle) koy.
-- **Tradeoffs / Risks:** Tema bazı arka planları sayfa front matter'ındaki `image:` alanından alabilir; şu an hiçbir içerikte bu dosyalar kullanılmıyor. Silmeden önce son kez `grep -r <ad> content layouts themes/*/layouts` çalıştır.
-- **Expected impact estimate:** Deploy çıktısı 11 MB → ~6.3 MB (~%43).
-- **Removal Safety:** Likely Safe (`manzara1.JPG` için kullanıcı niyeti teyit edilmeli)
-- **Reuse Scope:** local folder
-
-### B3. `<head>` içinde render-blocking script/CSS, ikisi tamamen ölü
+### O5. Görsel hook'u boyutsuz ve hep `lazy`: CLS ve geciken LCP
 - **Category:** Frontend
-- **Severity:** Medium
-- **Impact:** FCP/LCP, ana thread süresi, istek sayısı
-- **Evidence:** `themes/hugo-theme-cleanwhite/layouts/partials/head.html` her sayfada şunları `defer`/`async` olmadan `<head>` içine basıyor:
-
-  | Dosya | Ham | gzip | Durum |
-  |---|---|---|---|
-  | `js/jquery.min.js` | 84,320 | 29,384 | footer'daki inline scriptler (`generateCatalog`, tagcloud) kullanıyor |
-  | `js/bootstrap.min.js` | 35,452 | 9,400 | navbar collapse için |
-  | `js/hux-blog.min.js` | 1,342 | 588 | navbar scroll davranışı |
-  | `js/lazysizes.min.js` | 7,889 | 3,509 | **ölü**: çıktıda `lazyload` sınıfı 0 sayfada var. Tek kullanıcısı `post-image` shortcode'u, içerikte hiç kullanılmıyor. Görseller zaten native `loading="lazy"` ile geliyor (`layouts/_default/_markup/render-image.html`) |
-  | `css/zanshang.min.css` | 3,154 | 995 | **ölü**: bağış (reward) CSS'i, `reward = false` |
-  | `css/bootstrap.min.css` | 107,423 | 18,738 | tüm Bootstrap 3 |
-  | `css/font-awesome.all.min.css` | 59,345 | 12,713 | bkz. B4 |
-- **Why it's inefficient:** `<head>` içindeki senkron scriptler HTML ayrıştırmasını durduruyor. İlk boyama ~43 KB gzip JS'in inip çalışmasını bekliyor. Ölü iki dosya her sayfada 2 ekstra istek demek.
-- **Recommended fix:**
-  1. (Hızlı) `lazysizes` satırını kaldır ya da `{{ if .Page.Store.Get "hasLazyImage" }}` gibi bir koşula bağla. `zanshang.min.css` satırını `{{ if .Site.Params.reward }}` içine al.
-  2. (Orta) Kalan 3 scripti `<head>`'den çıkarıp `footer.html` içinde, jQuery kullanan inline scriptlerden **önce** yükle. Ya da `defer` ekleyip footer'daki inline scriptleri `document.addEventListener('DOMContentLoaded', ...)` içine sar. Sadece `defer` eklemek inline scriptleri kırar, çünkü jQuery onlar çalışırken henüz yüklenmemiş olur.
-- **Tradeoffs / Risks:** `head.html` zaten yamalı tema dosyası, değiştirmek serbest ama upstream ile farkı büyütür. Navbar açma/kapama ve içindekiler (catalog) davranışını mobilde test et.
-- **Expected impact estimate:** Ölü dosyalar: sayfa başına 2 istek ve ~4.5 KB gzip daha az. Script taşıma: yavaş 3G'de FCP'de birkaç yüz ms iyileşme (Lighthouse ile ölç).
-- **Removal Safety:** lazysizes/zanshang: Safe. Script taşıma: Needs Verification.
-- **Reuse Scope:** site-wide
-
-### B4. 11 ikon için Font Awesome'ın tamamı (~59 KB CSS + ~158 KB font)
-- **Category:** Frontend / Network
-- **Severity:** Medium
-- **Impact:** İlk ziyarette sayfa ağırlığı, font yüklenene kadar boş ikon kutuları
-- **Evidence:** Çıktıda kullanılan ikonlar: `fa-circle`, `fa-twitter`, `fa-linkedin`, `fa-github`, `fa-rss`, `fa-envelope`, `fa-search`, `fa-globe`, `fa-home` (+ `fa-stack` yardımcıları). Bunlar için `font-awesome.all.min.css` (59 KB) ile `fa-brands-400.woff2` (78 KB) ve `fa-solid-900.woff2` (80 KB) iniyor. CSS ayrıca repoda olmayan `fa-regular-400.*`, `.eot`, `.ttf`, `.svg` dosyalarına referans veriyor. Bunlar tarayıcı tarafından istenmiyor (woff2 önce seçiliyor, `far` ikonu yok) ama ölü kural.
-- **Why it's inefficient:** ~1.5 bin ikonun glyph'i ve CSS kuralı, 9 ikon için indiriliyor.
-- **Recommended fix:** 9 ikonu inline SVG'ye (ya da tek bir `static/img/icons.svg` sprite + `<use href>`) çevir. Kullanıldıkları yerler `footer.html`, `nav.html`, `sidebar.html`. Daha az iş isteyen ara çözüm: FA subsetter ile sadece bu glyph'leri içeren woff2 üret.
-- **Tradeoffs / Risks:** Birden çok yamalı partial'a dokunur. `fa-stack` görünümü CSS ile yeniden kurulmalı.
-- **Expected impact estimate:** İlk ziyarette ~45 KB gzip CSS+font yerine ~3-4 KB SVG (~%90 azalma). 2 font isteği ortadan kalkar.
-- **Removal Safety:** Needs Verification (görsel regresyon kontrolü)
-- **Reuse Scope:** site-wide
-
-### B5. CI tüm git geçmişini çekiyor (`fetch-depth: 0`), kimse kullanmıyor
-- **Category:** Build / Network / Cost
-- **Severity:** Medium
-- **Impact:** Her deploy'da checkout süresi ve indirilen veri
-- **Evidence:** `.github/workflows/hugo.yaml` checkout adımında `fetch-depth: 0` var. `hugo.toml` ve tüm layout'larda `enableGitInfo`/`.GitInfo` yok, yani geçmiş hiçbir yerde okunmuyor. Yerel paket boyutu **42.80 MiB**. Bunun ~40 MB'ı artık ağaçta olmayan, geçmişte kalmış görseller: `manzara2.JPG` 5.3 MB, `home-kedi.JPG` 4.7 MB, `head_image4-7.jpg` ~14 MB, `low-poly-abstract-design.zip` 3.0 MB, vb.
-- **Why it's inefficient:** Her push'ta, son commit ~8 MB iken ~43 MB'lık geçmiş indiriliyor.
-- **Recommended fix:** `fetch-depth: 0` satırını sil (varsayılan değer 1, sığ klon). İleride `enableGitInfo = true` açılırsa geri ekle.
-- **Tradeoffs / Risks:** Yok. Pagefind ve Hugo geçmişe ihtiyaç duymuyor.
-- **Expected impact estimate:** Checkout verisi ~43 MB → ~8 MB. Checkout adımında birkaç saniye kazanç.
+- **Severity:** Low-Medium
+- **Impact:** CLS, `/about/` ve `/tr/hakkimda/` sayfasında LCP
+- **Evidence:** `layouts/_default/_markup/render-image.html` çıktısı: `<img src=/img/profil-buyuk_hu_b8248d425cc81cfa.webp alt="M. Meriç Ordu" loading=lazy>`. `width`/`height` yok. Bu görsel `content/hakkimda/index.md:9`'da sayfanın ilk öğesi, yani ekranın üstünde ve muhtemelen sayfanın LCP öğesi.
+- **Why it's inefficient:** Boyut olmadan tarayıcı yer ayıramaz; görsel gelince altındaki metin kayar (CLS). Ekranın üstündeki görseli `lazy` yapmak, Chrome'un onu düzen hesaplanana kadar ertelemesine yol açar (Lighthouse "LCP image was lazily loaded" uyarısı).
+- **Recommended fix:** İşlenen görselin `.Width`/`.Height` değerlerini bas, sayfadaki ilk görsel (`.Ordinal 0`) için `loading` verme; `decoding="async"` ekle. `main.css:74`'teki `img { max-width:100%; height:auto }` en/boy oranını korur. Patch Bölüm 6'da.
+- **Tradeoffs / Risks:** İlk görsel ekranın altındaysa eager yüklenir; bu sitede kabul edilebilir.
+- **Expected impact estimate:** Hakkımda sayfasında CLS → ~0, LCP'de birkaç yüz ms (yavaş 3G'de ölç).
 - **Removal Safety:** Safe
-- **Reuse Scope:** CI
+- **Reuse Scope:** site-wide (markup hook)
 
-### B6. `_default/single.html` ile `post/single.html` neredeyse aynı (~130 satır x2)
+### O6. (UYGULANDI) `hugo.toml`'da ~30 ölü ayar; CLAUDE.md'de olmayan bir ayara atıf
+- **Category:** Maintainability / Dead Code
+- **Severity:** Low
+- **Impact:** Config okunabilirliği; ajanın/insanın yanlış varsayımı
+- **Evidence:** Site layout'larının okuduğu `site.Params` anahtarları sadece: `social`, `sidebar_avatar`, `header_image`, `tagline`, `SEOTitle`, `description`, `keyword`, `title_404`. Geri kalanlar sadece render edilmeyen tema şablonlarında kullanılıyor:
+  - `[params]`: `custom_css`, `sidebar`, `upstreamAttribution`, `archive_title`, `image_404`, `omit_categories`, `page_view_counter`, `leancloud_*`, `featured_tags`, `featured_condition_size`, `ba_track_id`, `disqus_proxy`, `disqus_site`, `twikoo_env_id`, `artalk_*`, `reward`, `friends`, `bookmarks`, `about_me`, `last_posts` + yorumlu `custom_css/custom_js` ve 15 satır yorumlu sosyal hesap şablonu.
+  - `[languages.*.params]`: `slogan`, `sidebar_about_description`, `last_posts_title`.
+  - Üst seviye: `preserveTaxonomyNames` (Hugo 0.55'te kaldırıldı, yok sayılıyor), `[pagination] pagerSize` (hiçbir şablon `.Paginate` kullanmıyor), `[services.disqus]`, `[services.googleAnalytics]`, `[mediaTypes]` woff/woff2 (sadece tema FA fontları için).
+  - `sidebar_avatar` adı yanıltıcı: artık header'daki ve yazı altındaki avatar için kullanılıyor.
+  - CLAUDE.md "`algolia_search = false` in hugo.toml" diyor; `hugo.toml`'da böyle bir satır yok.
+- **Why it's inefficient:** Config'in ~%40'ı etkisiz; okuyan kişi Disqus/ödül/sidebar'ın açılabilir olduğunu sanar.
+- **Recommended fix:** Listeyi sil. `sidebar_avatar` → `avatar` olarak yeniden adlandır (2 şablonda `site.Params.sidebar_avatar` güncellenir). CLAUDE.md'deki Algolia cümlesini "Algolia kullanılmıyor; temada kalan Algolia şablonları ölü" olarak düzelt. Tema kaldırılmadan önce yapılırsa sadece yorum değil, tema şablonlarının bu anahtarlara `default`'suz eriştiği yer var mı diye bakmaya gerek yok: o şablonlar zaten çalışmıyor.
+- **Tradeoffs / Risks:** Yok.
+- **Expected impact estimate:** `hugo.toml` ~250 → ~150 satır.
+- **Removal Safety:** Safe (`grep -rn 'Params\.<anahtar>' layouts` boş dönüyor; tema şablonları render edilmiyor)
+- **Reuse Scope:** config
+
+### O7. (KISMEN) Küçük şablon tekrarları
 - **Category:** Maintainability / Reuse Opportunity
-- **Severity:** Medium
-- **Impact:** Değişiklik yaparken iki dosya arasında sapma (drift) riski
-- **Evidence:** `layouts/_default/single.html` (130 satır) ve `layouts/post/single.html` (136 satır) aynı iskeleti paylaşıyor. Header görsel ifadesi (`{{ if .Params.image }}{{ partial "webp-image.html" ... }}`) ikisinde birebir tekrarlanıyor. Farklar küçük: biri inline `style`, diğeri `<style>` bloğu; tag listesi; tarih formatı (`:date_long` / `:date_full`); breadcrumb partial'ı ile inline container.
-- **Why it's inefficient:** İki dilli yapı ve i18n eklenirken iki dosya ayrı ayrı yamalandı. Bir sonraki değişiklikte biri unutulursa sayfalar tutarsızlaşır.
-- **Recommended fix:** Header bloğunu `layouts/partials/page-header.html` olarak çıkar, farkları parametre ile ver (`dict "page" . "showTags" true "dateFormat" ":date_full"`). Ya da `post/single.html` dosyasını `_default/single.html` üzerine ince bir katman yap.
-- **Tradeoffs / Risks:** Saf refactor. Davranış değişmemeli, çıktı HTML'ini önce/sonra diff'le.
-- **Expected impact estimate:** ~100 satır tekrar gider. Performans etkisi yok.
+- **Severity:** Low
+- **Impact:** Drift riski
+- **Evidence:**
+  - `layouts/_default/page.html` ile `layouts/_default/single.html` gövdeleri birebir aynı. `page.html` şu an gerekli: silinirse `layout: page` kullanan Hakkımda/Projeler sayfaları temanın `_default/page.html`'ine düşer. Tema kaldırılınca `page.html` silinebilir ve Hugo `single.html`'e düşer.
+  - Avatar dönüşümü iki yerde aynı: `resources.Get site.Params.sidebar_avatar` + `.Fill "96x96 webp Center q85"` (`partials/site/header.html`, `post/single.html` author-note).
+  - `post/single.html` önceki/sonraki yazıyı bulmak için bölümdeki tüm yazılarda elle döngü kuruyor (yazı başına O(n), toplam O(n²); n şu an 2).
+- **Recommended fix:** Avatarı `partials/site/avatar.html` (ya da `return` eden bir partial ile `partialCached`) olarak çıkar. Önceki/sonraki için `{{ $pages := (where site.RegularPages "Section" .Section).ByDate }}` sonrasında `$pages.Prev .` / `$pages.Next .`. **Dikkat:** Hugo'nun `Pages.Next/Prev` yönü dizin sırasının tersidir; çıktıyı mevcut sürümle diff'le. `page.html`'i tema kaldırıldığı commit'te sil.
+- **Tradeoffs / Risks:** Saf refactor; önce/sonra `public/` diff'i boş olmalı.
+- **Expected impact estimate:** Performansa etkisi ihmal edilebilir; ~25 satır tekrar gider.
 - **Removal Safety:** Needs Verification (çıktı diff'i)
 - **Reuse Scope:** module (layouts)
 
-### B7. Temanın vendored `static/` klasöründen 27 kullanılmayan dosya (~1.96 MB) yayına giriyor
-- **Category:** Build / Cost / Dead Code
+### O8. Gereksiz feed ve sitemap girdileri
+- **Category:** Build / Cost
 - **Severity:** Low
-- **Impact:** Deploy artifact boyutu (ziyaretçi bunları indirmiyor)
-- **Evidence:** Çıktıdaki `css/`, `js/`, `webfonts/` dosyaları üretilen HTML/CSS/JS içinde dosya adıyla arandı. Hiç referans almayanlar: `css/fonts/fontawesome-webfont.*` + `FontAwesome.otf` (FA v4, ~903 KB), `js/jquery.js` (247 KB, minify'sız kopya), `css/bootstrap.css` (145 KB), `js/bootstrap.js` (67 KB), `js/iDisqus.js` / `iDisqus.min.js` / `css/iDisqus.min.css` (~225 KB, sadece `disqus_proxy` doluysa), `js/kityminder.core.min.js` + `js/kity.min.js` (~223 KB, mindmap shortcode), `js/eac.min.json` (78 KB), `css/hugo-theme-cleanwhite.css`, `js/production.min.js`, `js/jquerymigrate.js`, `js/load-photoswipe.js`, `js/reward.js`, `js/fitvids.js`, `css/hugo-easy-gallery.css`, `css/mindmap.css`, `js/mindmap*.js`, `css/zanshang.css`, `js/hux-blog.js`.
-- **Why it's inefficient:** Hugo bunları her build'de kopyalıyor. Bazıları (mindmap, gallery, iDisqus) bir shortcode ya da özellik açılırsa gerekebilir. Minify'sız kopyalar hiçbir durumda yüklenmiyor.
-- **Recommended fix:** Önce kesin ölü olanları kaldır: minify'sız ikizler (`jquery.js`, `bootstrap.js`, `bootstrap.css`, `hugo-theme-cleanwhite.css`, `zanshang.css`, `hux-blog.js`), FA v4 font klasörü, `production.min.js`, `jquerymigrate.js`, `fitvids.js`, `reward.js`, `.map` dosyaları. Disqus/mindmap/gallery dosyalarını o özellikleri hiç kullanmayacağına karar verirsen kaldır. Tema vendored olduğu için silmek gitlink riskini geri getirmez. **Silme için açık "evet" gerekir.**
-- **Tradeoffs / Risks:** Upstream ile farkı büyütür (zaten yamalı). Bir şablon dosya adını dinamik kuruyorsa grep yakalamayabilir. Silmeden sonra tam build al ve tarayıcı ağ sekmesinde 404 kontrol et.
-- **Expected impact estimate:** Artifact ~2 MB küçülür (B2 ile birlikte ~11 MB → ~4.3 MB).
-- **Removal Safety:** Likely Safe (minify'sız ikizler ve FA v4: Safe; Disqus/mindmap/gallery: Needs Verification)
-- **Reuse Scope:** theme
+- **Impact:** Çıktı dosya sayısı, arama motoru tarama bütçesi
+- **Evidence:** Build 24 `index.xml` üretiyor; bunlardan `/search/index.xml` ve `/tr/search/index.xml` boş feed'ler. `/search/` ve `/tr/search/` sitemap'te (`public/en/sitemap.xml`, `public/tr/sitemap.xml`); içeriği JS ile dolan, `?q=` olmadan boş bir sayfa.
+- **Recommended fix:** `content/search/_index.md` ve `_index.tr.md` front matter'ına:
+  ```yaml
+  outputs: ["HTML"]
+  sitemap:
+    disable: true
+  ```
+  İsteğe bağlı: etiket feed'leri gerekmiyorsa `[outputs] term = ["HTML"]` ve `taxonomy = ["HTML"]`.
+- **Expected impact estimate:** 2-16 dosya daha az; sitemap'te ince sayfa yok.
+- **Removal Safety:** Safe
+- **Reuse Scope:** content front matter / config
 
-### B8. `webp-image` partial'ı build başına 70 kez çalışıyor, sonucu hep aynı
+### O9. Header/footer partial'ları her sayfada yeniden çalışıyor
 - **Category:** Build / Caching
 - **Severity:** Low
-- **Impact:** Build süresi (şu an önemsiz)
-- **Evidence:** `--templateMetricsHints` çıktısı: `_partials/webp-image.html` 70 çağrı, **cache potential %97**. `head.html` (og:image için) ve iki `single.html` her sayfada `.Site.Params.header_image` için aynı dönüşümü çağırıyor. `head.html` için cache potential %43.
-- **Why it's inefficient:** Hugo görsel dönüşümünü önbelleğe alıyor ama `resources.Get` + `.Process` zincirinin sorgusu yine her çağrıda tekrarlanıyor.
-- **Recommended fix:** Site geneli varsayılan için `partialCached "webp-image.html" .Site.Params.header_image .Site.Params.header_image` kullan. Sayfaya özel `.Params.image` için `partial` kalsın.
-- **Tradeoffs / Risks:** Yok denecek kadar az. Cache anahtarı görsel yolu olduğu için doğru kalır.
-- **Expected impact estimate:** Toplam ~52 ms kümülatif partial süresinden çoğu gider. Wall-clock'ta ~10-20 ms. İçerik arttıkça doğrusal kazanç.
+- **Impact:** Build süresi (şu an 203 ms, sorun değil)
+- **Evidence:** `--templateMetricsHints`: `site/footer.html` 34 çağrı, **cache potential %98**; `site/header.html` %68; `site/icon.html` 380 çağrı (her çağrıda 19 SVG string'li iki `dict` kuruluyor).
+- **Recommended fix:** Footer'ı `{{ partialCached "site/footer.html" . site.Language.Lang }}` yap (içeriği sayfaya değil dile bağlı; `now.Year` build zamanında zaten sabit). İkon için string argümanlı çağrılarda `partialCached "site/icon.html" "search" "search"`. Header sayfaya bağlı (`aria-current`, çeviri linki) olduğu için olduğu gibi kalsın.
+- **Tradeoffs / Risks:** Footer'a ileride sayfaya özel bir şey eklenirse cache anahtarı yanlış olur; partial'ın başına not düş.
+- **Expected impact estimate:** Wall-clock'ta birkaç ms. İçerik 10 kat büyüse bile önemsiz kalır. **Sadece hijyen; yapmasan da olur.**
 - **Removal Safety:** Safe
 - **Reuse Scope:** module (layouts)
 
-### B9. Sidebar "son yazılar": iç içe `where` + `.Site.Pages`
-- **Category:** Algorithm / Readability
+### O10. og:image 1920x1440 WebP
+- **Category:** Reliability / Network
 - **Severity:** Low
-- **Impact:** Okunabilirlik. Sidebar'ın 22 render'ında küçük bir tarama maliyeti.
-- **Evidence:** `layouts/partials/sidebar.html:274`: `where (where .Site.Pages "Type" "post") "IsPage" true`. Her sidebar render'ında tüm sayfalar (taksonomi ve liste sayfaları dahil) iki kez filtreleniyor.
-- **Why it's inefficient:** `.Site.RegularPages` zaten sadece normal sayfaları içeriyor, dıştaki filtreye gerek yok.
-- **Recommended fix:** `{{ range first (.Site.Params.last_posts_count | default 5 | int) (where .Site.RegularPages "Type" "post") }}` (Hugo 0.165'te `where` için `.Site.RegularPages "Section" "post"` de olur).
-- **Tradeoffs / Risks:** Sıralama aynı kalır (varsayılan weight/date/title).
-- **Expected impact estimate:** İhmal edilebilir hız, daha net kod.
+- **Impact:** LinkedIn/WhatsApp link önizlemesi
+- **Evidence:** Her sayfada `og:image` = `head_image1_hu_*.webp` (47 KB, 1920x1440, 4:3). Önizleme kartları 1.91:1 (1200x630) kırpıyor. LinkedIn'in WebP og:image desteği belgelerde tutarsız; site LinkedIn odaklı bir danışmanlık portföyü.
+- **Recommended fix:** og:image için ayrı, sabit bir türev üret: `.Fill "1200x630 jpg Center q80"` (~60-90 KB JPEG). LinkedIn Post Inspector ile önce/sonra kontrol et.
+- **Tradeoffs / Risks:** Biraz daha büyük dosya, ama sadece crawler'lar indiriyor.
+- **Expected impact estimate:** Performans etkisi yok; önizleme güvenilirliği.
+- **Removal Safety:** Needs Verification (LinkedIn Post Inspector)
+- **Reuse Scope:** local (`site/head.html`)
+
+### O11. `/search/` sayfası her tuşta listeyi boşaltıyor
+- **Category:** Frontend
+- **Severity:** Low
+- **Impact:** Yazarken titreme ve düzen kayması
+- **Evidence:** `assets/js/search.js` `pageUpdate()`: `pList.replaceChildren()` ve `more.hidden = true` sorgu beklenmeden **önce** çalışıyor; `debouncedSearch` 150 ms sonra döndüğü için her tuşta liste boşalıp yeniden doluyor. `history.replaceState` de her tuşta çağrılıyor. Üstteki açılır panel (`update()`) bunu doğru yapıyor: eski sonuçlar yenisi gelene kadar duruyor.
+- **Recommended fix:** Listeyi temizleme ve durum metnini yazma işini `res` geldikten ve sorgunun hâlâ güncel olduğu doğrulandıktan sonraya taşı. `replaceState`'i de aynı yere al.
+- **Expected impact estimate:** Görsel kararlılık; ölçülebilir hız etkisi yok.
 - **Removal Safety:** Safe
 - **Reuse Scope:** local file
 
-### B10. `hugo.toml` içinde kapalı özelliklere ait "hayalet" ayarlar
-- **Category:** Maintainability / Dead Code
-- **Severity:** Low
-- **Impact:** Config okunabilirliği, şablonlarda ölü dallar
-- **Evidence:** Boş ya da `false` değerli ve hiçbir zaman açılmayacak görünen anahtarlar: `[services.disqus] shortname=""`, `[services.googleAnalytics] id=""`, `page_view_counter`/`leancloud_*`, `ba_track_id`, `disqus_proxy`/`disqus_site`, `twikoo_env_id`, `artalk_*`, `reward`, `friends`, `bookmarks`, yorum satırına alınmış `custom_css`/`custom_js` ve 15 satır yorumlu sosyal hesap şablonu.
-- **Why it's inefficient:** Config'i okuyan kişi (ya da ajan) bunların aktif olduğunu sanabilir. Şablonlarda karşılık gelen dallar her render'da değerlendiriliyor (maliyeti önemsiz).
-- **Recommended fix:** Tema varsayılanları zaten boş/false olanları sil. Şablon `if` kontrolleri olmayan anahtarda da `false`'a düşer. Kaldırmadan önce `grep -r '.Site.Params.<anahtar>' themes/*/layouts layouts` ile her birinin `default`'suz zorunlu kullanımı olmadığını doğrula.
-- **Tradeoffs / Risks:** İleride Disqus vb. açmak istersen anahtarları tema README'sinden geri eklemen gerekir.
-- **Expected impact estimate:** ~40 satır daha kısa config.
-- **Removal Safety:** Likely Safe
-- **Reuse Scope:** config
-
-### B11. Küçük görsel israfları: `favicon.ico` 72 KB, `profil-buyuk.png` aslında JPEG q100
-- **Category:** Frontend
-- **Severity:** Low
-- **Impact:** İlk ziyaret ağırlığı
-- **Evidence:** `static/img/favicon.ico` 72,398 byte, tek ikon 132x132, 32 bpp. Her ilk ziyarette iniyor. `static/img/profil-buyuk.png`, `.png` uzantılı ama `file` çıktısına göre JPEG, `quality = 100`, 250x250. Sidebar'da WebP'ye dönüştürülüyor (5.4 KB), ama sidebar dışında doğrudan `/img/profil-buyuk.png` olarak da veriliyor (ana sayfa HTML'inde `src=/img/profil-buyuk.png`).
-- **Recommended fix:** 16+32+48 px'lik çok boyutlu bir `.ico` (~5-15 KB) ve 180 px `apple-touch-icon` PNG üret. Profil görselinin uzantısını gerçek formatla eşleştir (`.jpg`) ve q85'e indir, ya da sidebar'daki gibi `webp-image` partial'ından geçir.
-- **Expected impact estimate:** ~60 KB favicon tasarrufu. Profil için ~40 KB.
-- **Removal Safety:** Safe (dosya adı değişirse `hugo.toml` ve iki `hakkimda` içeriği güncellenmeli)
-- **Reuse Scope:** local file
-
-### B12. Dokümantasyon sapması: CLAUDE.md olmayan bir script'ten bahsediyor
-- **Category:** Maintainability / Dead Code
-- **Severity:** Low
-- **Impact:** Ajan/insan zaman kaybı
-- **Evidence:** CLAUDE.md, `build_algolia_index.sh` dosyasının `npm run algolia` çağırdığını anlatıyor. **Bu dosya repoda yok.** Buna karşın temada `layouts/_default/list.algolia.json` ve Algolia partial'ları duruyor, `algolia_search = false` ve arama Pagefind ile yapılıyor. Ek olarak `content/post/siber-guvenlik/` boş bir klasör (git izlemiyor, eski konumlandırmadan kalma).
-- **Recommended fix:** CLAUDE.md'deki Algolia maddesini "Algolia kaldırıldı, arama Pagefind" olarak güncelle. Algolia JSON çıktı formatı hiçbir `outputs` tanımında yoksa `list.algolia.json` ölü kod, ama yamalı dosyalar listesinde geçtiği için silmeden önce teyit et. Boş klasörü kaldır (açık "evet" ile).
-- **Removal Safety:** Safe (doküman), Needs Verification (`list.algolia.json`)
-- **Reuse Scope:** repo docs
-
-### B13. CI her çalışmada Hugo `.deb` ve Pagefind binary'sini sıfırdan indiriyor
+### O12. CI her çalışmada Hugo `.deb` ve Pagefind'i sıfırdan indiriyor
 - **Category:** Build / Network
 - **Severity:** Low
 - **Impact:** Deploy süresi (birkaç saniye)
-- **Evidence:** `wget` ile Hugo extended `.deb` (~20 MB) ve `npx --yes pagefind@1.5.2` (platform binary'si) her run'da indiriliyor. `resources/_gen` gitignore'da, yani 3 görsel dönüşümü her CI build'inde yeniden yapılıyor.
-- **Recommended fix:** İsteğe bağlı: `actions/cache` (SHA ile pinli) ile `~/.npm` ve `resources/_gen`'i önbelleğe al. Hugo `.deb` zaten SHA256 ile doğrulanıyor. Önbelleğe almak tedarik zinciri doğrulamasını atlamamalı, doğrulama adımı yine çalışmalı.
-- **Tradeoffs / Risks:** Ek bir action pinlenip bakımı yapılmalı. Bu boyuttaki site için kazanç küçük. **Düşük öncelik, yapmasan da olur.**
-- **Expected impact estimate:** Run başına ~5-15 sn.
+- **Evidence:** `.github/workflows/hugo.yaml`: `wget` ile ~20 MB `.deb`, `npx --yes pagefind@1.5.2`. Checkout, build'e girmeyen tema `exampleSite/` + `images/` (~5 MB) dahil ~13 MB çekiyor.
+- **Recommended fix:** Önce O1/O3 (tema) ile checkout küçülür. Önbellek isteğe bağlı: SHA ile pinli `actions/cache` ile `~/.npm`; SHA256 doğrulaması önbellekten sonra da çalışmalı.
+- **Tradeoffs / Risks:** Bakımı yapılacak bir action daha. Bu boyutta site için **düşük öncelik**.
+- **Expected impact estimate:** Run başına ~5-10 sn.
 - **Removal Safety:** Safe
 - **Reuse Scope:** CI
 
@@ -203,113 +214,187 @@ Site küçük: 61 sayfa (31 EN + 30 TR), build süresi **286 ms**, build uyarıs
 
 ## 3) Quick Wins (Do First)
 
-| # | İş | Süre | Kazanç |
-|---|---|---|---|
-| 1 | B1: `business_foto1.jpg`'yi 480 px'e küçült ve EXIF'i sil (aynı dosya adı) | 5 dk | `/kart/` 1.76 MB → ~70 KB |
-| 2 | B5: workflow'dan `fetch-depth: 0` satırını sil | 1 dk | CI checkout ~43 MB → ~8 MB |
-| 3 | B3.1: `lazysizes` satırını kaldır, `zanshang.min.css` satırını `reward` koşuluna bağla | 5 dk | Her sayfada 2 istek ve ~4.5 KB gzip daha az |
-| 4 | B2: 9 referanssız görseli kaldır (açık onayla) | 5 dk | Deploy −4.7 MB, `manzara1.JPG` EXIF'i yayından kalkar |
-| 5 | B8: header görseli için `partialCached` | 5 dk | Build'de küçük kazanç, iyi alışkanlık |
-| 6 | B12: CLAUDE.md'deki Algolia maddesini düzelt | 2 dk | Doğru bağlam |
+| # | İş | Süre | Kazanç | Onay gerekir mi |
+|---|---|---|---|---|
+| 1 | O2: `passthrough` uzantısını kapat | 1 dk | Bir sınıf build hatası gider | Hayır |
+| 2 | O3: `webp-image.html`'i `layouts/partials/`'a kopyala | 1 dk | Tema kaldırmanın önü açılır | Hayır |
+| 3 | O1.1: `theme =` yerine sadece-layout mount'u (ya da tema kaldırma) | 5 dk | Çıktı −3.08 MB | Mount: hayır. Kaldırma: **evet** |
+| 4 | O4: favicon'u 16+32 px ICO olarak yeniden üret | 5 dk | İlk ziyarette −67 KB | Hayır (yerinde değişim) |
+| 5 | O1.2: 10 ölü görsel + `custom.css` sil | 2 dk | Çıktı −1.27 MB | **Evet** (silme) |
+| 6 | O5: render-image'e width/height, ilk görsel eager | 5 dk | Hakkımda'da CLS ~0 | Hayır |
+| 7 | O8: arama sayfası için `outputs`/`sitemap` front matter | 2 dk | Boş feed ve ince sitemap girdisi gider | Hayır |
+| 8 | O6: CLAUDE.md'deki `algolia_search` cümlesini düzelt | 1 dk | Doğru bağlam | Hayır |
 
 ## 4) Deeper Optimizations (Do Next)
 
-1. **B3.2 Script yüklemesini footer'a taşı / `defer` et.** En büyük gerçek FCP kazancı. Mobilde navbar ve içindekiler (catalog) testi gerektirir.
-2. **B4 Font Awesome → inline SVG sprite.** ~45 KB gzip ve 2 font isteği gider.
-3. **B6 single şablonlarını birleştir.** Bundan sonraki her layout değişikliğini ucuzlatır.
-4. **B7 tema static temizliği.** Önce kesin ölüler, sonra özellik bazlı.
-5. **Git geçmişinden ~40 MB görseli temizlemek** (`git filter-repo --strip-blobs-bigger-than 1M` ya da yol bazlı). Sadece B5'ten sonra hâlâ önemliyse düşün: force-push gerektirir, mevcut klonları bozar, 2026-10-09'daki geçmiş yeniden yazımı ve bekleyen GitHub destek talebiyle (#4840656) çakışabilir. **Talep kapanmadan yapma.** Yerel olarak `.git/objects/pack/` içinde 3 yarım kalmış `tmp_pack_*` (5.2 MB) var. `git gc --prune=now` bunları temizler (sadece yerel, onayla).
-6. **Bootstrap 3 + jQuery bağımlılığını küçültmek.** Kullanılan Bootstrap bileşenleri az (grid, navbar collapse). Uzun vadede tema CSS'ini PurgeCSS benzeri bir adımla budamak ~18 KB gzip'i ~5 KB'a indirebilir. Elle yamalı tema yüzünden maliyeti yüksek, ROI'si orta.
+1. **Temayı tamamen kaldırmak** (O1 + O2 + O3 + O7'nin `page.html` kısmı + O6'nın tema parametreleri). Sıra: webp-image kopyası → `theme =` satırı → build + çıktı diff'i → `themes/` klasörünü silmek (**açık "evet"**) → CLAUDE.md'deki tema maddelerini güncellemek. Sonuç: ~10 MB daha küçük repo ağacı, ~0.7 MB'lık deploy, gizli fallback katmanı yok.
+2. **O6 config temizliği**, tema kaldırıldıktan sonra tek commit'te (`[mediaTypes]`, tema parametreleri, `sidebar_avatar` → `avatar`).
+3. **`static -> assets` mount'unu kaldırmak.** Kaynak görseller (`head_image1.jpg`, `profil-buyuk.png`) `assets/img/`'e taşınırsa bu mount'a ihtiyaç kalmaz; CLAUDE.md'deki `useEmbedded = "never"` notunun kök nedeni de (mount edilmiş `/kart/` klasörünü kaynak sanma) ortadan kalkar. Ama `useEmbedded`'i geri açmak ayrı bir test ister, kendiliğinden yapma. Taşıma için **açık "evet"**.
+4. **Önbellek başlıkları.** GitHub Pages fingerprint'li dosyalar dahil her şeye `Cache-Control: max-age=600` veriyor; `immutable` ayarlanamıyor. Tekrar ziyaretlerde 10 dakikada bir koşullu istek (304) gider. Çözüm sadece önüne bir CDN (ör. Cloudflare) koymak; bu boyutta site için gerekmez, kayıt için yazıldı.
+
+**Bilerek önerilmeyenler:**
+- `theme-init.js`'i inline etmek (160 B'lık render-blocking istek gider ama CSP'ye hash eklemek gerekir; CLAUDE.md inline script'i yasaklıyor, kazanç ~1 RTT).
+- `syntax.css`'i sadece kod bloğu olan sayfalara ayırmak (gzip'le birkaç KB, tek CSS isteği bozulur).
+- `/kart/` avatarını WebP'ye çevirmek (102 KB → ~40 KB olur ama `kart.css` derlenmiş ve Tailwind kaynağı yok; önce `tools/kart/` kurulmalı).
 
 ## 5) Validation Plan
 
 **Ölçüm (önce/sonra):**
-- `hugo --gc --minify --cleanDestinationDir` uyarısız bitmeli (CLAUDE.md şartı). Çıktıyı karşılaştır: `du -sb public; find public -type f | wc -l`. Referans: **11 MB, 160 dosya, 286 ms**.
-- Sayfa ağırlığı: `hugo server` + Chrome DevTools Network (cache kapalı, "Fast 3G") ile `/`, `/tr/`, `/post/flx-case-study/`, `/kart/`. Toplam transfer, istek sayısı, FCP/LCP değerlerini not al.
-- Lighthouse mobil (CLI: `npx lighthouse http://localhost:1313/kart/ --preset=perf --form-factor=mobile`). Hedefler: `/kart/` LCP < 1.5 sn, ana sayfada "Eliminate render-blocking resources" uyarısında azalma.
-- Build şablon maliyeti: `hugo --templateMetrics --templateMetricsHints` → `webp-image.html` çağrı sayısı 70'ten ~6'ya inmeli (B8).
-- CI: Actions logunda "Checkout" adımının süresi ve indirilen boyutu (B5).
+- `hugo --gc --minify --cleanDestinationDir` uyarısız bitmeli. Referans: **146 dosya, 5,158,364 byte, 203 ms**. `du -sb public; find public -type f | wc -l`.
+- Ölü dosya kontrolü (O1 sonrası 0'a yakın olmalı):
+  ```bash
+  find public -type f \( -path 'public/css/*' -o -path 'public/js/*' -o -path 'public/webfonts/*' -o -path 'public/img/*' \) \
+    ! -name 'site.min.*' ! -name 'theme-init.min.*' ! -name 'favicon.ico' ! -name '*_hu_*' -printf '%s\n' \
+    | awk '{s+=$1;n++} END{print n" dosya, "s" byte"}'
+  ```
+- Kırık link kontrolü (her silme/taşımadan sonra): üretilen HTML'deki her yerel `src`/`href`'in `public/` altında var olduğunu doğrula:
+  ```bash
+  grep -rhoE '(src|href)=("[^"]*"|[^ >]+)' public --include='*.html' | sed -E 's/^(src|href)=//; s/"//g' \
+    | grep '^/' | grep -v '^//' | sed 's/[?#].*//' | sort -u \
+    | while read p; do f="public$p"; [ -e "$f" ] || [ -e "${f%/}/index.html" ] || echo "EKSİK: $p"; done
+  ```
+- Lighthouse mobil: `/about/` (CLS, LCP, "lazily loaded LCP image" uyarısı), `/post/flx-case-study/` (toplam transfer).
+- `hugo --templateMetrics --templateMetricsHints`: `site/footer.html` cache yüzdesi ~%97'ye çıkmalı (O9).
 
 **Doğruluk testleri:**
-- `/kart/`: avatar kırpımı/konumu görsel olarak aynı, vCard indirme (`kart.js`) çalışıyor, tarayıcı konsolunda CSP ihlali yok.
-- Her iki dilde: dil değiştirici çeviriye gidiyor, mobil navbar açılıp kapanıyor, yazı sayfalarında içindekiler (side catalog) oluşuyor, tag cloud renkleniyor (jQuery bağımlılıkları).
-- İkon değişikliği (B4) sonrası footer/sidebar sosyal ikonlarının ekran görüntüsünü önce/sonra karşılaştır.
-- Şablon refactoru (B6) sonrası: `diff -r public.before public.after` sadece beklenen farkları göstermeli.
-- Silmelerden sonra (B2, B7): `grep -rhoE '(src|href)=[^ >]+' public | sort -u` ile linklenen tüm yerel yolların `public/` altında var olduğunu kontrol et (404 yok).
-- Pagefind: CI'daki `npx pagefind --site public` sonrası arama EN ve TR'de sonuç döndürüyor.
+- O2: Geçici bir test yazısına kod span'ı dışında `\(x\)` ve bir ` ```mermaid ` bloğu koy (throwaway kopya, `~/snap/hugo/common/` altında); passthrough kapalıyken build geçmeli ve metin olduğu gibi görünmeli.
+- O3/O1 tema değişikliği: `cp -r public /home/yemliha/snap/hugo/common/public.before` → değişiklik → build → `diff -r` sadece silinen static dosyaları göstermeli, hiçbir `.html` farkı olmamalı.
+- O5: Hakkımda sayfasında görselin oranı ve köşe yuvarlaması aynı; `width`/`height` attribute'ları var.
+- O7: Önceki/sonraki linkleri iki dilde de aynı yönü gösteriyor.
+- O8: `/search/?q=n8n` CI'daki Pagefind ile hâlâ çalışıyor; sitemap'te `search` yok.
+- O10: LinkedIn Post Inspector'da kart görseli görünüyor.
+- Her değişiklikten sonra tarayıcı konsolunda CSP ihlali yok.
 
 ## 6) Optimized Code / Patch (öneri, uygulanmadı)
 
-**B1: kart avatarı (dosya adı aynı, `kart.css` değişmez)**
-```bash
-# Orijinali repo dışına yedekle, sonra yerinde küçült + EXIF sil
-cp static/kart/business_foto1.jpg ~/Pictures/business_foto1.orig.jpg
-convert static/kart/business_foto1.jpg -auto-orient -resize 540x -strip \
-        -interlace Plane -quality 80 static/kart/business_foto1.jpg
-exiftool -all= -overwrite_original static/kart/business_foto1.jpg   # ikinci kontrol
-```
-`-resize 540x` en/boy oranını korur (~540x486), böylece `background-position`/`background-size` aynı davranır.
-
-**B5: `.github/workflows/hugo.yaml`**
+**O2: `hugo.toml`** (matematik kullanılmıyor)
 ```diff
-       - name: Checkout
-         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
--        with:
--          fetch-depth: 0
--          # NOT: hugo-theme-cleanwhite ... submodules: true gerekmiyor.
-+        # Varsayılan sığ klon (fetch-depth: 1) yeterli: enableGitInfo kullanılmıyor.
-+        # Tema vendored, submodules: true gerekmiyor.
+-    [markup.goldmark.extensions]
+-      [markup.goldmark.extensions.passthrough]
+-        enable = true
+-        [markup.goldmark.extensions.passthrough.delimiters]
+-          block = [['\[', '\]'], ['$$', '$$']]
+-          inline = [['\(', '\)']]
 ```
 
-**B3.1: `themes/hugo-theme-cleanwhite/layouts/partials/head.html`**
+**O1 adım 1: `hugo.toml`** (tema dosyaları silinmeden static'i kesmek)
 ```diff
--    <!-- zangshang CSS -->
--    <link rel="stylesheet" href="{{ "css/zanshang.min.css" | relURL }}">
-+    {{ if .Site.Params.reward }}
-+    <link rel="stylesheet" href="{{ "css/zanshang.min.css" | relURL }}">
-+    {{ end }}
+-theme = "hugo-theme-cleanwhite"
  ...
--    <!-- lazy load image JavaScript -->
--    <script src="{{ "js/lazysizes.min.js" | relURL }}"></script>
-+    {{/* lazysizes sadece post-image shortcode'u için gerekli; içerikte kullanılmıyor.
-+         Görseller render-image hook'unda native loading="lazy" ile geliyor. */}}
+ [module]
++  # Temadan sadece layout'lar (webp-image partial'ı ve shortcode'lar) alınıyor;
++  # temanın static/ klasörü (Bootstrap, jQuery, FA fontları) artık yayına girmiyor.
++  [[module.imports]]
++    path = "hugo-theme-cleanwhite"
++    [[module.imports.mounts]]
++      source = "layouts"
++      target = "layouts"
+   [[module.mounts]]
 ```
 
-**B8: `head.html` ve iki `single.html`**
-```diff
--    {{ $ogImage := partial "webp-image.html" .Site.Params.header_image }}
-+    {{ $ogImage := partialCached "webp-image.html" .Site.Params.header_image .Site.Params.header_image }}
-```
-```diff
--{{ else }}{{ partial "webp-image.html" .Site.Params.header_image | safeURL }}{{ end }}
-+{{ else }}{{ partialCached "webp-image.html" .Site.Params.header_image .Site.Params.header_image | safeURL }}{{ end }}
-```
-
-**B9: `layouts/partials/sidebar.html:274`**
-```diff
--        {{ range ((where (where .Site.Pages "Type" "post") "IsPage" true).Limit (.Site.Params.last_posts_count | default 5 | int)) }}
-+        {{ range first (.Site.Params.last_posts_count | default 5 | int) (where .Site.RegularPages "Type" "post") }}
-```
-
-**B2: silinecek dosyalar (sadece açık "evet" ile)**
+**O3: kopya (site seviyesi override)**
 ```bash
-git rm static/img/{manzara1.JPG,post.png,home-bg-jeep.jpg,contact-bg.jpg,post-bg-coffee.jpeg,post-bg-unix-linux.jpg,tag-bg.jpg,disqus.png,search.png}
+cp themes/hugo-theme-cleanwhite/layouts/partials/webp-image.html layouts/partials/webp-image.html
+```
+
+**O4: favicon (aynı dosya adı)**
+```bash
+cp static/img/favicon.ico ~/Pictures/favicon.orig.ico
+convert ~/Pictures/favicon.orig.ico[0] -resize 32x32 -define icon:auto-resize=32,16 static/img/favicon.ico
+```
+
+**O5: `layouts/_default/_markup/render-image.html`**
+```diff
+ {{- $dest := .Destination -}}
+ {{- $src := $dest -}}
++{{- $img := false -}}
+ ...
+       {{- with .Process "webp" -}}
+         {{- $src = .RelPermalink -}}
++        {{- $img = . -}}
+       {{- end -}}
+ ...
++{{- /* Sayfanın ilk görseli genelde ekranın üstünde: lazy yüklenirse LCP gecikir. */ -}}
++{{- $loading := cond (eq .Ordinal 0) "eager" "lazy" -}}
+ {{ if .Title }}
+   <figure>
+-    <img src="{{ $src }}" alt="{{ .Text }}" loading="lazy">
++    <img src="{{ $src }}" alt="{{ .Text }}"{{ with $img }} width="{{ .Width }}" height="{{ .Height }}"{{ end }} loading="{{ $loading }}" decoding="async">
+     <figcaption>{{ .Title }}</figcaption>
+   </figure>
+ {{ else }}
+-  <img src="{{ $src }}" alt="{{ .Text }}" loading="lazy">
++  <img src="{{ $src }}" alt="{{ .Text }}"{{ with $img }} width="{{ .Width }}" height="{{ .Height }}"{{ end }} loading="{{ $loading }}" decoding="async">
+ {{ end }}
+```
+
+**O8: `content/search/_index.md` ve `_index.tr.md`**
+```diff
+ ---
+ title: "Search"
+ description: "Search the site."
++outputs: ["HTML"]
++sitemap:
++  disable: true
+ ---
+```
+
+**O9: `layouts/_default/baseof.html`**
+```diff
+-  {{ partial "site/footer.html" . }}
++  {{- /* Footer sayfaya değil dile bağlı: dil başına bir kez render edilir. */}}
++  {{ partialCached "site/footer.html" . site.Language.Lang }}
+```
+
+**O11: `assets/js/search.js` `pageUpdate()`**
+```diff
+   async function pageUpdate() {
+     var q = pInput.value.trim();
+-    var url = new URL(window.location.href);
+-    if (q) url.searchParams.set("q", q); else url.searchParams.delete("q");
+-    history.replaceState(null, "", url);
+-    pList.replaceChildren();
+-    more.hidden = true;
+-    current = [];
+-    shown = 0;
+-    if (!q) { pStatus.textContent = ""; return; }
++    if (!q) { reset(); pStatus.textContent = ""; syncUrl(q); return; }
+     var res;
+     try {
+       res = await search(q);
+     } catch (e) {
+       pStatus.textContent = S.unavailable;
+       return;
+     }
+     if (res === null || pInput.value.trim() !== q) return;
++    // Eski sonuçlar yenisi gelene kadar ekranda kalır: yazarken liste titremez.
++    reset();
++    syncUrl(q);
+     current = res.results;
+```
+(`reset()` = `pList.replaceChildren(); more.hidden = true; current = []; shown = 0;`, `syncUrl(q)` = mevcut `URL` + `replaceState` satırları.)
+
+**O1 adım 2: silinecek dosyalar (sadece açık "evet" ile)**
+```bash
+git rm static/img/{post.png,home-bg-jeep.jpg,contact-bg.jpg,404-bg.jpg,post-bg-coffee.jpeg,post-bg-unix-linux.jpg,tag-bg.jpg,disqus.png,favicon.png,search.png} static/css/custom.css
 ```
 
 ---
 
-## Önceki denetimin (2025-08-21) durumu
+## Önceki denetimin (2026-10-09) durumu
 
 | Eski bulgu | Durum |
 |---|---|
-| 1. `public/` içinde 199 MB artık dosya | **Çözüldü** (`--cleanDestinationDir`, CI build) |
-| 2. 2.4 MB header görseli | **Çözüldü** (114 KB kaynak + 47 KB WebP, `webp-image` partial) |
-| 3. `static/img/` içinde ~33 MB ölü dosya | **Kısmen**: büyük kısmı gitti, 9 dosya (~4.7 MB) kaldı → B2 |
-| 4. Post içi görseller işlenmemiş | **Çözüldü** (`render-image.html` → WebP + `loading="lazy"`) |
-| 5. Sidebar çift `where` | **Açık** → B9 |
-| 6. single şablonları kopya | **Açık** → B6 |
-| 7. `deploy.sh` minify/clean yok | **Geçersiz** (GitHub Actions'a geçildi) |
-| 8. Tema vendor CSS/JS ikizleri | **Açık** → B7 |
-| 9. FastClick üçüncü parti script | **Çözüldü** (footer'dan kaldırıldı) |
-| 10. `hugo.toml` hayalet ayarlar | **Açık** → B10 |
-| 11. `languageCode` deprecated | **Çözüldü** (`locale` kullanılıyor, build uyarısız) |
+| B1. `/kart/` avatarı 1.7 MB | **Çözüldü** (102 KB, 540x486, EXIF yok) |
+| B2. `static/img/` referanssız 9 dosya | **Kısmen**: `manzara1.JPG` gitti; 8'i kaldı, redesign ile `404-bg.jpg` ve `favicon.png` da ölü oldu → O1 |
+| B3. `<head>`'de render-blocking jQuery/Bootstrap, ölü lazysizes/zanshang | **Redesign ile çözüldü**: tema `head.html` artık render edilmiyor; sayfada tek defer'lı JS bundle var |
+| B4. 11 ikon için Font Awesome | **Çözüldü** (`partials/site/icon.html` inline SVG) |
+| B5. CI `fetch-depth: 0` | **Çözüldü** (sığ klon) |
+| B6. İki `single.html` kopyası | **Geçersiz** (yeniden yazıldı); yeni küçük tekrar → O7 |
+| B7. Tema static'inden 27 ölü dosya | **Açık ve büyüdü**: artık temanın static'inin tamamı (61 dosya, 3.08 MB) ölü → O1 |
+| B8. `webp-image` 70 kez çalışıyor | **Çözüldü** (`partialCached`, %94 cache isabeti) |
+| B9. Sidebar çift `where` | **Geçersiz** (sidebar kaldırıldı) |
+| B10. `hugo.toml` hayalet ayarlar | **Açık ve büyüdü** → O6 |
+| B11. `favicon.ico` 72 KB, `profil-buyuk.png` aslında JPEG q100 | Favicon **açık** → O4. Profil görseli artık sadece WebP türevleriyle (1.9 / 5.4 KB) veriliyor, sorun değil |
+| B12. CLAUDE.md'de olmayan Algolia script'i | **Çözüldü**; yerine yeni küçük sapma (`algolia_search` satırı) → O6 |
+| B13. CI indirme önbelleği | **Açık**, düşük öncelik → O12 |

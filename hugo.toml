@@ -1,143 +1,29 @@
 baseURL = "https://melwis880.github.io/"
 title = "M. Meriç Ordu"
-theme = "hugo-theme-cleanwhite"
 
 # İki dilli site: İngilizce kök adreste (/), Türkçe /tr/ altında. Dil başına
-# değişen başlık, slogan, SEO metinleri ve menüler aşağıdaki [languages] bloğunda.
+# değişen başlık satırı, SEO metinleri ve menüler aşağıdaki [languages] bloğunda.
 defaultContentLanguage = "en"
 defaultContentLanguageInSubdir = false
-preserveTaxonomyNames = true
-hasCJKLanguage = false
-
-# Herhangi bir [[module.mounts]] tanımlandığında Hugo'nun 7 varsayılan mount'unun
-# (content/data/layouts/i18n/archetypes/assets/static) TAMAMI kaybolur, tek tek
-# yeniden tanımlanması gerekir - aksi halde içerik/layout okunmaz olur. Sondaki
-# ekstra `static -> assets` mount'u, mevcut static/ klasör yapısını değiştirmeden
-# resources.Get ile aynı dosyaları Hugo Pipes görsel işleme için de erişilebilir kılar.
-[module]
-  [[module.mounts]]
-    source = "content"
-    target = "content"
-  [[module.mounts]]
-    source = "data"
-    target = "data"
-  [[module.mounts]]
-    source = "layouts"
-    target = "layouts"
-  [[module.mounts]]
-    source = "i18n"
-    target = "i18n"
-  [[module.mounts]]
-    source = "archetypes"
-    target = "archetypes"
-  [[module.mounts]]
-    source = "assets"
-    target = "assets"
-  [[module.mounts]]
-    source = "static"
-    target = "static"
-  [[module.mounts]]
-    source = "static"
-    target = "assets"
-
-
-[services]
-  # Enable comments by entering your Disqus shortname
-  [services.disqus]
-    shortname = ""
-  [services.googleAnalytics]
-    id = ""
-
-[pagination]
-  pagerSize = 5 # frontpage pagination
 
 [outputs]
 home = ["HTML", "RSS"]
 
 [params]
-
-  custom_css = ["css/custom.css"]
-
-  sidebar = true
-
-
-  header_image = "img/head_image1.jpg"
-  upstreamAttribution = true
-  archive_title = " "
-  
-
-  image_404 = "img/404-bg.jpg"
-  omit_categories = true
-
-  # leancloud storage for page view counter
-  page_view_counter = false
-  leancloud_app_id = ""
-  leancloud_app_key = ""
-
-  # Sidebar settings
-  sidebar_avatar = "img/profil-buyuk.png"      # use absolute URL, seeing it's used in both `/` and `/about/`
-
-  featured_tags = true 
-  featured_condition_size = 1 
-
-  # Baidu Analytics
-  ba_track_id = ""
-  
-  # We need a proxy to access Disqus api in China
-  # Follow https://github.com/zhaohuabing/disqus-php-api to set up your own disqus proxy
-  disqus_proxy = ""
-  disqus_site = ""
-
-  # Twikoo comments
-  # Follow https://twikoo.js.org/ to set up your own env_id
-  twikoo_env_id = ""
-
-  # Artalk comments
-  # Follow https://artalk.js.org/ to set up your own server
-  artalk_enable = false
-  artalk_server = ""
-  artalk_site = ""
-
-  #Enable wechat pay & alipay to allow readers send reward money if they like the articles 
-  reward = false 
-  # reward_guide = "Makaleyi Faydalı bulduysanız bağış vermeyi unutmayın" 
-
-  friends = false
-  bookmarks = false
-  about_me = true
-
-  # Last posts
-  last_posts = true
-  #last_posts_count = 5
-
-  # Include any custom CSS and/or JS files, url or relative to /static folder
-  #custom_css = ["css/lightbox.css", "https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css", "css/main.css"]
-  #custom_js = ["js/lightbox.js", "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js", "js/main.js"]
+  # Görseller assets/img/ altında; resources.Get ile okunup WebP'ye çevriliyor.
+  header_image = "img/head_image1.jpg"   # og:image
+  avatar = "img/profil-buyuk.png"        # başlıktaki ve yazı sonundaki avatar
 
   [params.social]
-  rss            = true 
+  rss            = true
   email          = "muharremmeric.ordu@gmail.com"
-  #facebook      = "full profile url in facebook"
-  #googleplus    = "full profile url in googleplus"
   twitter        = "https://x.com/atlas_tabip"
   linkedin       = "https://www.linkedin.com/in/mericordu"
-  #stackoverflow  = "https://stackoverflow.com/users/yourstackoverflowid"
-  #instagram     = "full profile url in instagram"
   github         = "https://github.com/Melwis880"
-  #wechat         = "your wechat qr code image"
-  #medium        = "full profile url in medium"
-  #slack         = "full workspace url in slack"
-  #pinterest     = "full profile url in pinterest"
-  #reddit        = "full profile url in reddit"
-  #gitlab        = "full profile url in gitlab"
-  #mastodon      = "full profile url in mastodon"
-  #keybase       = "full profile url in keybase"
-  #xing          = "https://www.xing.com/profile/yourxingid"
-  #git           = "full profile url for git user"
-  
+
 # --- DİLLER VE MENÜLER ---
-# Menü URL'leri dil önekiyle birlikte tam yazılır (nav.html bunları relURL ile basar),
-# böylece /kart/ gibi tek dilli statik sayfalar /tr/kart/ olarak bozulmaz.
+# Menü URL'leri dil önekiyle birlikte tam yazılır (partials/site/header.html bunları
+# relURL ile basar), böylece /kart/ gibi tek dilli statik sayfalar /tr/kart/ olarak bozulmaz.
 
 [languages]
   [languages.en]
@@ -148,9 +34,6 @@ home = ["HTML", "RSS"]
       SEOTitle = "AI Automation Consultant"
       description = "AI Automation Consultant and Computer Engineering student. Case studies on n8n, API and LLM automations that take manual work off small businesses and professionals."
       keyword = "M. Meriç Ordu, AI automation, AI consultant, n8n, LLM, AI agents, Python, Claude Code, SME automation"
-      slogan = "Bringing ideas to life with AI."
-      sidebar_about_description = "AI Automation Consultant | Computer Engineering Student. I build n8n, API and LLM automations that take repetitive work off small teams."
-      last_posts_title = "RECENT POSTS"
       title_404 = "The page you are looking for does not exist :("
       tagline = "AI Automation Consultant | Computer Engineering Student"
     # Ana sayfaya isim/avatar götürüyor; kartvizit (/kart/) menüde değil, alt bilgide.
@@ -175,9 +58,6 @@ home = ["HTML", "RSS"]
       SEOTitle = "Yapay Zeka Otomasyon Danışmanı"
       description = "Yapay zeka otomasyon danışmanı ve Bilgisayar Mühendisliği öğrencisi. KOBİ'lerin ve profesyonellerin elle yaptığı işleri azaltan n8n, API ve LLM otomasyonları üzerine vaka analizleri."
       keyword = "M. Meriç Ordu, yapay zeka otomasyonu, yapay zeka danışmanı, n8n, LLM, yapay zeka ajanları, Python, Claude Code, KOBİ otomasyonu"
-      slogan = "Fikirleri yapay zekayla hayata geçirmek."
-      sidebar_about_description = "Yapay Zeka Otomasyon Danışmanı | Bilgisayar Mühendisliği Öğrencisi. Küçük ekiplerin tekrar eden işlerini n8n, API ve LLM otomasyonlarıyla üstleniyorum."
-      last_posts_title = "SON YAZILAR"
       title_404 = "Aradığınız sayfa bulunamadı :("
       tagline = "Yapay Zeka Otomasyon Danışmanı | Bilgisayar Mühendisliği Öğrencisi"
     [[languages.tr.menus.main]]
@@ -204,10 +84,10 @@ home = ["HTML", "RSS"]
   [markup.highlight]
     noClasses = false
   [markup.goldmark]
-    # Çok dilli sitelerde Hugo'nun gömülü link render hook'u otomatik açılıyor ve
-    # /kart/ gibi static/ altındaki (aynı zamanda assets olarak mount edilen) klasörlere
-    # verilen linkleri kaynak olarak yayınlamaya çalışıp build'i kırıyor. İçerikteki
-    # linkler zaten dil önekiyle tam yazılıyor, o yüzden kapalı.
+    # Çok dilli sitelerde Hugo'nun gömülü link render hook'u otomatik açılıyor. Eskiden
+    # static/ aynı zamanda assets olarak mount edildiği için /kart/ linkini kaynak olarak
+    # yayınlamaya çalışıp build'i kırıyordu. O mount artık yok, ama içerikteki linkler zaten
+    # dil önekiyle tam yazıldığı için kapalı kalıyor; açmak ayrı bir test ister.
     [markup.goldmark.renderHooks.link]
       useEmbedded = "never"
     [markup.goldmark.renderer]
@@ -216,15 +96,3 @@ home = ["HTML", "RSS"]
       # layouts/index.html (headline | markdownify) ve layouts/post/single.html
       # (updates[].note | markdownify) ham HTML'e açılır.
       unsafe = false
-    [markup.goldmark.extensions]
-      [markup.goldmark.extensions.passthrough]
-        enable = true
-        [markup.goldmark.extensions.passthrough.delimiters]
-          block = [['\[', '\]'], ['$$', '$$']]
-          inline = [['\(', '\)']]
-
-[mediaTypes]
-  [mediaTypes.'font/woff']
-    suffixes = ['woff']
-  [mediaTypes.'font/woff2']
-    suffixes = ['woff2']
