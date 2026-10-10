@@ -211,6 +211,10 @@ home = ["HTML", "RSS"]
     [markup.goldmark.renderHooks.link]
       useEmbedded = "never"
     [markup.goldmark.renderer]
+      # Kapalı kalmalı. Açılırsa Markdown içindeki ham HTML olduğu gibi basılır; bu sadece
+      # yazıları değil, ön bilgi alanlarını markdownify ile basan şablonları da etkiler:
+      # layouts/index.html (headline | markdownify) ve layouts/post/single.html
+      # (updates[].note | markdownify) ham HTML'e açılır.
       unsafe = false
     [markup.goldmark.extensions]
       [markup.goldmark.extensions.passthrough]

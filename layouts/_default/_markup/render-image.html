@@ -22,9 +22,9 @@
 {{- end -}}
 {{ if .Title }}
   <figure>
-    <img src="{{ $src | safeURL }}" alt="{{ .Text }}" loading="lazy">
+    <img src="{{ $src }}" alt="{{ .Text }}" loading="lazy">
     <figcaption>{{ .Title }}</figcaption>
   </figure>
 {{ else }}
-  <img src="{{ $src | safeURL }}" alt="{{ .Text }}" loading="lazy">
+  <img src="{{ $src }}" alt="{{ .Text }}" loading="lazy">
 {{ end }}

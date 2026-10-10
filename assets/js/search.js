@@ -30,6 +30,30 @@
 
   function fill(text, value) { return (text || "").replace("%s", value); }
 
+  // HTML entity'lerini çözer (&amp; -> &); sonuç sadece metin olarak kullanılır.
+  var decoder = document.createElement("textarea");
+  function decode(html) {
+    decoder.innerHTML = html;
+    return decoder.value;
+  }
+
+  // Pagefind alıntısını innerHTML kullanmadan yazar: sadece <mark> öğe olur,
+  // geri kalan her şey metin düğümü olarak eklenir.
+  function setExcerpt(el, html) {
+    (html || "").split(/(<mark>[\s\S]*?<\/mark>)/).forEach(function (part) {
+      if (!part) return;
+      var m = /^<mark>([\s\S]*)<\/mark>$/.exec(part);
+      var text = document.createTextNode(decode(m ? m[1] : part));
+      if (m) {
+        var mark = document.createElement("mark");
+        mark.appendChild(text);
+        el.appendChild(mark);
+      } else {
+        el.appendChild(text);
+      }
+    });
+  }
+
   function statusLine(text) {
     var p = document.createElement("p");
     p.className = "search-status";
@@ -50,7 +74,7 @@
     title.textContent = data.meta.title || data.url;
     var excerpt = document.createElement("span");
     excerpt.className = "search-hit-excerpt";
-    excerpt.innerHTML = data.excerpt; // Pagefind'in kaçışlı alıntısı; sadece <mark> etiketi içerir
+    setExcerpt(excerpt, data.excerpt);
     a.append(meta, title, excerpt);
     if (!tag) return a;
     var li = document.createElement(tag);

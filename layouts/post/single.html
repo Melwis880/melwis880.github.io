@@ -62,7 +62,10 @@
         {{- end }}{{ end }}
         {{- /* Hakkımda sayfasının dildeki adresi (/about/, /tr/hakkimda/) sayfanın kendisinden alınır. */}}
         {{- $about := "" }}{{ with site.GetPage "/hakkimda" }}{{ $about = .RelPermalink }}{{ end }}
-        <p>{{ i18n "authorNote" (dict "email" site.Params.social.email "about" $about) | safeHTML }}</p>
+        {{- /* Linkler şablonda: i18n'de sadece düz metin var, safeHTML gerekmiyor. */}}
+        <p>{{ i18n "authorNote" }}
+          {{- with $about }} <a href="{{ . }}">{{ i18n "authorNoteAbout" }}</a>.{{ end }}
+          {{- with site.Params.social.email }} {{ i18n "authorNoteAsk" }} <a href="mailto:{{ . }}">{{ i18n "authorNoteEmail" }}</a>.{{ end }}</p>
       </div>
       {{- with .Params.ai_use }}<p class="ai-note">{{ i18n (printf "aiNote-%s" .) }}</p>{{ end }}
 

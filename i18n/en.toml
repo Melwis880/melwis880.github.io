@@ -111,7 +111,13 @@ other = "Next post"
 [morePosts]
 other = "More posts"
 [authorNote]
-other = "I'm Meriç, an AI automation consultant and Computer Engineering student. <a href=\"{{ .about }}\">More about me</a>. Have a similar problem? <a href=\"mailto:{{ .email }}\">Email me</a>."
+other = "I'm Meriç, an AI automation consultant and Computer Engineering student."
+[authorNoteAbout]
+other = "More about me"
+[authorNoteAsk]
+other = "Have a similar problem?"
+[authorNoteEmail]
+other = "Email me"
 [aiNote-edit]
 other = "Written by me. I used AI for proofreading and translation."
 [aiNote-draft]

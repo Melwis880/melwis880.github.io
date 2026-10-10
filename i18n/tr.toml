@@ -110,7 +110,13 @@ other = "Sonraki yazı"
 [morePosts]
 other = "Diğer yazılar"
 [authorNote]
-other = "Ben Meriç; yapay zeka otomasyon danışmanı ve Bilgisayar Mühendisliği öğrencisiyim. <a href=\"{{ .about }}\">Hakkımda daha fazlası</a>. Benzer bir sorunun mu var? <a href=\"mailto:{{ .email }}\">Bana yaz</a>."
+other = "Ben Meriç; yapay zeka otomasyon danışmanı ve Bilgisayar Mühendisliği öğrencisiyim."
+[authorNoteAbout]
+other = "Hakkımda daha fazlası"
+[authorNoteAsk]
+other = "Benzer bir sorunun mu var?"
+[authorNoteEmail]
+other = "Bana yaz"
 [aiNote-edit]
 other = "Bu yazıyı ben yazdım. Düzelti ve çeviride yapay zeka kullandım."
 [aiNote-draft]
