@@ -8,7 +8,7 @@
 
 | Bulgu | Durum | Not |
 |---|---|---|
-| O13 | **Uygulandı** | `layouts/home.rss.xml` (sadece yazılar), iki `/now/` sayfasına sabit `date: 2026-10-10`. İsteğe bağlı `timeZone` **eklenmedi** |
+| O13 | **Uygulandı** | `layouts/home.rss.xml` (sadece yazılar), iki `/now/` sayfasına sabit `date: 2026-10-10`, `timeZone = "Europe/Istanbul"` (ayrı commit; çıktıda sadece saat dilimi ekleri `+00:00` → `+03:00` değişti, görünen 34 tarihin hepsi aynı) |
 | O14 | **Uygulandı** | `[languages.tr] disableKinds = ["404"]` |
 | O15 | **Uygulandı** | `_default/post.html` silindi, 6 i18n anahtarı x 2 dil çıkarıldı, 4 eski yorum düzeltildi, `.visually-hidden` silindi. CLAUDE.md güncellendi |
 | O16 | Bilerek açık | Sahibinin kararı: `notes` dalları kalıyor |

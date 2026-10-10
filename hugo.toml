@@ -6,6 +6,10 @@ title = "M. Meriç Ordu"
 defaultContentLanguage = "en"
 defaultContentLanguageInSubdir = false
 
+# Saat yazılmamış tarihler (date: 2026-10-10) TR saatiyle okunur. CI UTC'de çalıştığı için bu
+# olmadan gece yarısından sonra (TR) push edilen bir yazı/sayfa "gelecekte" sayılıp build'den düşer.
+timeZone = "Europe/Istanbul"
+
 [outputs]
 home = ["HTML", "RSS"]
 
