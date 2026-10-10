@@ -9,6 +9,10 @@
       {{- if $s.rss }}{{ with site.Home.OutputFormats.Get "rss" }}<li><a class="s-rss" href="{{ .RelPermalink }}" aria-label="RSS" title="RSS">{{ partial "site/icon.html" "rss" }}</a></li>{{ end }}{{ end }}
     </ul>
     <p class="footer-links">
+      {{- /* /now sayfası dile göre /now/ ya da /tr/simdi/. */}}
+      {{- with site.GetPage "/now" }}
+      <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a> ·
+      {{- end }}
       {{- /* /kart/ tek dilli statik bir sayfa: relLangURL değil relURL. */}}
       <a href="{{ "kart/" | relURL }}">{{ i18n "businessCard" }}</a>
       · © {{ now.Year }} {{ site.Title }}

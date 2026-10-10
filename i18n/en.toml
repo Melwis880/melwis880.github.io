@@ -27,6 +27,28 @@ other = "Bu sayfayı Türkçe oku"
 other = "Digital business card"
 [backHome]
 other = "Back to the home page"
+[email]
+other = "Email"
+[lastUpdated]
+other = "Updated:"
+
+# Projeler (data/projects.yaml kind alanı)
+[project-own-tool]
+other = "Own tool"
+[project-demo]
+other = "Demo"
+
+# 404. notFoundOther* diğer dilde yazılı: GitHub Pages /tr/ için de bu sayfayı sunar.
+[notFoundTitle]
+other = "This page does not exist."
+[notFoundText]
+other = "It may have moved, or the link may be wrong."
+[notFoundOther]
+other = "Türkçe: Aradığın sayfa burada yok."
+[notFoundOtherHome]
+other = "Ana sayfa"
+[notFoundOtherWriting]
+other = "Yazılar"
 [searchHint]
 other = "Search (press /)"
 [searchPlaceholder]

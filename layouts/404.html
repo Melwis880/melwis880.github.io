@@ -1,7 +1,25 @@
+{{- /*
+  404 sayfası. GitHub Pages her eksik adres için (/tr/... dahil) sadece kökteki /404.html'i
+  (İngilizce) sunar; bu yüzden sayfanın altında diğer dildeki kısa karşılığı da var. O satırın
+  metni i18n'de, diğer dilde yazılı (notFoundOther*; switchLanguage ile aynı yöntem).
+*/ -}}
 {{ define "main" }}
-<div class="container">
-  <p class="type-label">404</p>
-  <h1 class="page-title">{{ site.Params.title_404 }}</h1>
-  <p><a href="{{ "/" | relLangURL }}">{{ i18n "backHome" }} →</a></p>
+<div class="container not-found">
+  <p class="not-found-code" aria-hidden="true">404</p>
+  <h1 class="page-title">{{ i18n "notFoundTitle" }}</h1>
+  <p class="page-lead">{{ i18n "notFoundText" }}</p>
+  <p class="not-found-links">
+    <a class="btn" href="{{ "/" | relLangURL }}">{{ i18n "backHome" }} →</a>
+    <a class="btn" href="{{ "post/" | relLangURL }}">{{ i18n "allWriting" }} →</a>
+  </p>
+  {{- range site.Home.AllTranslations }}
+    {{- if ne .Language.Lang site.Language.Lang }}
+  <p class="not-found-other" lang="{{ .Language.Lang }}">
+    {{ i18n "notFoundOther" }}
+    <a href="{{ .RelPermalink }}">{{ i18n "notFoundOtherHome" }}</a> ·
+    <a href="{{ .RelPermalink }}post/">{{ i18n "notFoundOtherWriting" }}</a>
+  </p>
+    {{- end }}
+  {{- end }}
 </div>
 {{ end }}

@@ -1,4 +1,5 @@
-{{- /* Genel sayfa (Hakkımda, Projeler vb.): başlık + içerik. 2. aşamada bu sayfalara özel şablonlar gelecek. */ -}}
+{{- /* Kendi şablonu olmayan sayfalar için genel sayfa: başlık + içerik. Hakkımda, Projeler ve /now
+     kendi şablonlarını kullanır (layout: about | projects | now). */ -}}
 {{ define "main" }}
 <div class="container" data-pagefind-meta="type:{{ i18n "type-page" }}">
   <h1 class="page-title" data-pagefind-meta="title">{{ .Title }}</h1>

@@ -34,7 +34,6 @@ home = ["HTML", "RSS"]
       SEOTitle = "AI Automation Consultant"
       description = "AI Automation Consultant and Computer Engineering student. Case studies on n8n, API and LLM automations that take manual work off small businesses and professionals."
       keyword = "M. Meriç Ordu, AI automation, AI consultant, n8n, LLM, AI agents, Python, Claude Code, SME automation"
-      title_404 = "The page you are looking for does not exist :("
       tagline = "AI Automation Consultant | Computer Engineering Student"
     # Ana sayfaya isim/avatar götürüyor; kartvizit (/kart/) menüde değil, alt bilgide.
     [[languages.en.menus.main]]
@@ -58,7 +57,6 @@ home = ["HTML", "RSS"]
       SEOTitle = "Yapay Zeka Otomasyon Danışmanı"
       description = "Yapay zeka otomasyon danışmanı ve Bilgisayar Mühendisliği öğrencisi. KOBİ'lerin ve profesyonellerin elle yaptığı işleri azaltan n8n, API ve LLM otomasyonları üzerine vaka analizleri."
       keyword = "M. Meriç Ordu, yapay zeka otomasyonu, yapay zeka danışmanı, n8n, LLM, yapay zeka ajanları, Python, Claude Code, KOBİ otomasyonu"
-      title_404 = "Aradığınız sayfa bulunamadı :("
       tagline = "Yapay Zeka Otomasyon Danışmanı | Bilgisayar Mühendisliği Öğrencisi"
     [[languages.tr.menus.main]]
       name = "Yazılar"

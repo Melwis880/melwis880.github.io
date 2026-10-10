@@ -5,7 +5,7 @@
        çalışmadığı için yok. /kart/ sayfasının kendi, daha sıkı CSP'si var (static/kart/index.html). */}}
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ if .IsHome }}{{ site.Title }} | {{ site.Params.SEOTitle }}{{ else }}{{ .Title }} | {{ site.Title }}{{ end }}</title>
+  <title>{{ if .IsHome }}{{ site.Title }} | {{ site.Params.SEOTitle }}{{ else if eq .Kind "404" }}404 · {{ i18n "notFoundTitle" }} | {{ site.Title }}{{ else }}{{ .Title }} | {{ site.Title }}{{ end }}</title>
   {{- $description := .Description | default site.Params.description }}
   <meta name="description" content="{{ $description }}">
   <meta name="keywords" content="{{ site.Params.keyword }}">

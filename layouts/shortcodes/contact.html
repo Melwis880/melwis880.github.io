@@ -1,0 +1,16 @@
+{{- /*
+  İletişim linkleri (e-posta, LinkedIn, GitHub), hugo.toml'daki params.social'dan; iki parçalı
+  rozet: solda renkli ad, sağda adres/kullanıcı adı. Adresler sadece hugo.toml'da yazılı.
+*/ -}}
+{{- $s := site.Params.social }}
+<ul class="contact-links">
+  {{- with $s.email }}
+  <li><a class="contact-link c-email" href="mailto:{{ . }}"><span class="contact-label">{{ partial "site/icon.html" "mail" }}{{ i18n "email" }}</span><span class="contact-handle">{{ . }}</span></a></li>
+  {{- end }}
+  {{- with $s.linkedin }}
+  <li><a class="contact-link c-linkedin" href="{{ . }}" rel="me noopener"><span class="contact-label">{{ partial "site/icon.html" "linkedin" }}LinkedIn</span><span class="contact-handle">{{ path.Base . }}</span></a></li>
+  {{- end }}
+  {{- with $s.github }}
+  <li><a class="contact-link c-github" href="{{ . }}" rel="me noopener"><span class="contact-label">{{ partial "site/icon.html" "github" }}GitHub</span><span class="contact-handle">{{ path.Base . }}</span></a></li>
+  {{- end }}
+</ul>

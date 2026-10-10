@@ -1,0 +1,17 @@
+{{- /*
+  Teknoloji rozetleri: sayfanın ön bilgisindeki stack listesinden.
+    stack:
+      - group: "Code & automation"
+        items: ["Python", "n8n"]
+  Rozetler düz CSS (dış rozet servisi yok); her grubun rengi sırasına göre (g1, g2, g3...).
+*/ -}}
+{{- with .Page.Params.stack }}
+<div class="stack">
+  {{- range $i, $g := . }}
+  <div class="stack-group g{{ add $i 1 }}">
+    <span class="stack-label">{{ $g.group }}</span>
+    <ul class="badges">{{ range $g.items }}<li class="badge">{{ . }}</li>{{ end }}</ul>
+  </div>
+  {{- end }}
+</div>
+{{- end }}

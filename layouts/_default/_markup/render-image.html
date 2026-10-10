@@ -6,6 +6,7 @@
 */ -}}
 {{- $dest := .Destination -}}
 {{- $src := $dest -}}
+{{- $img := false -}}
 {{- if not (or (hasPrefix $dest "http://") (hasPrefix $dest "https://")) -}}
   {{- $resourcePath := $dest -}}
   {{- if hasPrefix $dest "/" -}}
@@ -16,15 +17,19 @@
     {{- with resources.Get $resourcePath -}}
       {{- with .Process "webp" -}}
         {{- $src = .RelPermalink -}}
+        {{- $img = . -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
+{{- /* Boyut yazılır (görsel gelince metin kaymasın, CLS). Sayfanın ilk görseli genelde ekranın
+     üstünde: lazy yüklenirse LCP gecikir, bu yüzden sadece o eager. */ -}}
+{{- $loading := cond (eq .Ordinal 0) "eager" "lazy" -}}
 {{ if .Title }}
   <figure>
-    <img src="{{ $src }}" alt="{{ .Text }}" loading="lazy">
+    <img src="{{ $src }}" alt="{{ .Text }}"{{ with $img }} width="{{ .Width }}" height="{{ .Height }}"{{ end }} loading="{{ $loading }}" decoding="async">
     <figcaption>{{ .Title }}</figcaption>
   </figure>
 {{ else }}
-  <img src="{{ $src }}" alt="{{ .Text }}" loading="lazy">
+  <img src="{{ $src }}" alt="{{ .Text }}"{{ with $img }} width="{{ .Width }}" height="{{ .Height }}"{{ end }} loading="{{ $loading }}" decoding="async">
 {{ end }}

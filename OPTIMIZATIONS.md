@@ -12,10 +12,10 @@
 | O1 | **Uygulandı** | Tema kaldırıldı (`theme =` satırı + `themes/`, 173 dosya, 8.3 MB), `static/img/` altındaki 10 ölü görsel ve `static/css/custom.css` silindi, `head_image1.jpg` ile `profil-buyuk.png` `assets/img/`'e taşındı |
 | O2 | **Uygulandı** | `passthrough` bloğu kaldırıldı; tema gidince math/chem/mermaid hook'ları da gitti |
 | O3 | **Uygulandı** | `layouts/partials/webp-image.html` site seviyesinde |
-| O4 | **Uygulandı** | `favicon.ico` 16+32 px, 72,398 → 5,238 byte (aynı görsel). `apple-touch-icon` eklenmedi. `/kart/` kendi favicon'unu tanımlamadığı için tarayıcı hâlâ `/favicon.ico` isteyip 404 alıyor (önceden de böyleydi) |
-| O5 | Ertelendi | Hakkımda sayfası 2. aşamada baştan yazılacak |
+| O4 | **Uygulandı** | `favicon.ico` 16+32 px, 72,398 → 5,238 byte (aynı görsel). `apple-touch-icon` eklenmedi. `/kart/` artık `../img/favicon.ico`'yu tanımlıyor (2. aşama, 2026-10-10); kendi CSP'si altında yüklendiği doğrulandı |
+| O5 | **Uygulandı** (2. aşama) | `render-image.html` `width`/`height` basıyor, sayfanın ilk görseli `eager`, hepsi `decoding=async`. Hakkımda fotoğrafı artık şablonda: 240x240 WebP, `width=120 height=120`, lazy değil, `fetchpriority=high` |
 | O6 | **Uygulandı** | 36 ölü ayar ve yorum blokları silindi, `[module]` bloğu kaldırıldı (`static -> assets` mount'u dahil), `sidebar_avatar` → `avatar`. `useEmbedded = "never"` bilerek kaldı. CLAUDE.md düzeltildi |
-| O7 | Kısmen | `page.html` 2. aşamadaki Hakkımda/Projeler şablonları için kaldı; avatar ve önceki/sonraki tekrarı açık |
+| O7 | Kısmen | `page.html` silindi (2. aşama; `layout: page` kullanan sayfa kalmamıştı, çıktı birebir aynı). Avatar ve önceki/sonraki tekrarı açık |
 | O8 | Ertelendi | Sitemap'te `/search/` sonraya kaldı |
 | O9, O11 | Açık | Düşük öncelik |
 | O10 | Ertelendi | Paylaşım kartları / og:image biçimi 3. aşamada |

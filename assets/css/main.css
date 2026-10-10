@@ -209,6 +209,10 @@ main { padding: 2.5rem 0 3rem; }
 .post-layout { display: block; }
 
 .post-header { margin-bottom: 2rem; }
+/* Yazı doğrudan bir başlıkla başlıyorsa (.prose > :first-child üst boşluğu sıfırlıyor), alt başlık
+   ve etiket yokken başlık tarih satırına yapışmasın. Margin değil padding: margin, üstteki
+   .post-header boşluğuyla birleşip kaybolurdu (İçindekiler'li ızgarada ise birleşmez). */
+.post-body .prose > :is(h2, h3):first-child { padding-top: 1rem; }
 
 .type-label {
   display: inline-flex; align-items: center; gap: .4rem;
@@ -249,7 +253,8 @@ main { padding: 2.5rem 0 3rem; }
     max-width: var(--width-wide); margin: 0 auto; padding: 0 1.25rem;
   }
   .post-layout.has-toc > .container { padding: 0; max-width: none; margin: 0; }
-  .post-layout.has-toc .post-header { grid-column: 1; grid-row: 1; }
+  /* Üstteki "> .container { margin: 0 }" başlık bloğunun alt boşluğunu da sıfırlıyordu. */
+  .post-layout.has-toc .post-header { grid-column: 1; grid-row: 1; margin-bottom: 2rem; }
   .post-layout.has-toc .post-body { grid-column: 1; grid-row: 2; }
   .post-layout.has-toc .toc-column { grid-column: 2; grid-row: 1 / span 2; }
   .post-layout.has-toc .toc {
@@ -358,6 +363,128 @@ main { padding: 2.5rem 0 3rem; }
 .post-nav span { display: block; color: var(--muted); font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .2rem; }
 .post-nav .next { text-align: right; grid-column: 2; }
 
+/* ---------- Projeler (layouts/_default/projects.html, data/projects.yaml) ---------- */
+.project-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.25rem; }
+
+.project {
+  padding: 1.25rem 1.35rem;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+}
+.project:hover { border-color: var(--accent-line); }
+
+.project-head { display: flex; align-items: center; gap: .7rem; margin-bottom: .65rem; }
+.project-icon {
+  display: flex; align-items: center; justify-content: center; flex: none;
+  width: 2.1rem; height: 2.1rem;
+  color: var(--accent); background: var(--accent-soft); border-radius: 8px;
+}
+.project-icon .icon { width: 1.15rem; height: 1.15rem; }
+.project-title { margin: 0; font-family: var(--font-mono); font-size: 1.15rem; line-height: 1.3; }
+.project-year { color: var(--muted); font-weight: 400; }
+.project-kind {
+  margin-left: auto; padding: .1rem .55rem; white-space: nowrap;
+  font-family: var(--font-mono); font-size: .7rem; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); border: 1px solid var(--border); border-radius: 999px;
+}
+.project-kind.is-demo { color: var(--warn); border-color: currentColor; }
+
+.project-problem { margin: 0 0 1rem; }
+
+.project-stats {
+  list-style: none; margin: 0 0 .9rem; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: .6rem;
+}
+.project-stats li { padding: .55rem .75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; line-height: 1.3; }
+.project-stats strong { display: block; color: var(--accent); font-family: var(--font-mono); font-size: 1.2rem; font-weight: 700; }
+.project-stats span { display: block; margin-top: .15rem; color: var(--muted); font-size: .8rem; }
+
+.project-meta { margin: 0; color: var(--muted); font-family: var(--font-mono); font-size: .78rem; line-height: 1.6; }
+.project-note { margin: .35rem 0 0; color: var(--muted); font-size: .85rem; line-height: 1.5; }
+
+.project-links {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .6rem;
+  margin: 1rem 0 0; padding-top: .85rem; border-top: 1px solid var(--border);
+  color: var(--border); font-size: .92rem;
+}
+.project-links a { display: inline-flex; align-items: center; gap: .35rem; text-decoration: none; }
+.project-links a:hover { text-decoration: underline; }
+
+/* ---------- Hakkımda (layouts/_default/about.html) ---------- */
+.about-title { font-family: var(--font-mono); letter-spacing: -0.01em; }
+.about-title .prompt { color: var(--accent); }
+
+.about-intro {
+  display: grid; grid-template-columns: 120px 1fr; gap: 1.25rem; align-items: center;
+  margin: 1.25rem 0 1.75rem;
+}
+.about-photo {
+  display: block; width: 120px; height: 120px; border-radius: 50%;
+  border: 2px solid var(--accent-line); object-fit: cover;
+}
+.about-greeting { margin: 0; font-size: 1.2rem; line-height: 1.5; }
+.about-greeting strong { color: var(--heading); }
+
+/* Teknoloji rozetleri ({{< stack >}}): düz CSS, her grup kendi renginde. */
+.stack { display: grid; gap: .75rem; margin: 0 0 1.15rem; }
+.stack-group { display: grid; grid-template-columns: 11rem 1fr; gap: .4rem 1rem; align-items: baseline; }
+.stack-label { color: var(--muted); font-family: var(--font-mono); font-size: .75rem; letter-spacing: .05em; text-transform: uppercase; }
+.prose .badges { display: flex; flex-wrap: wrap; gap: .4rem; margin: 0; padding: 0; list-style: none; }
+.prose .badges li { margin: 0; }
+.badge {
+  --c: var(--accent);
+  padding: .15rem .6rem; border-radius: 6px;
+  font-family: var(--font-mono); font-size: .8rem; font-weight: 600; line-height: 1.6;
+  color: var(--c);
+  background: color-mix(in srgb, var(--c) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c) 40%, transparent);
+}
+.stack-group.g2 .badge { --c: var(--note); }
+.stack-group.g3 .badge { --c: var(--warn); }
+.stack-group.g4 .badge { --c: var(--danger); }
+
+/* İletişim ({{< contact >}}): iki parçalı rozet, solda marka rengi, sağda adres. */
+.prose .contact-links { display: flex; flex-wrap: wrap; gap: .6rem; margin: 0 0 1.15rem; padding: 0; list-style: none; }
+.prose .contact-links li { margin: 0; }
+.contact-link {
+  display: inline-flex; align-items: stretch; max-width: 100%;
+  border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+  font-size: .88rem; line-height: 1.2; text-decoration: none;
+}
+.contact-link:hover { border-color: var(--accent-line); }
+.contact-label {
+  display: inline-flex; align-items: center; gap: .4rem; flex: none;
+  padding: .5rem .7rem; color: #fff; font-weight: 600;
+}
+.contact-handle {
+  display: inline-flex; align-items: center; min-width: 0; padding: .5rem .75rem;
+  background: var(--surface); color: var(--heading); font-family: var(--font-mono); font-size: .82rem;
+  overflow-wrap: anywhere;
+}
+.contact-link:hover .contact-handle { color: var(--accent); }
+.c-email .contact-label { background: #1a7f37; }
+.c-linkedin .contact-label { background: #0a66c2; }
+.c-github .contact-label { background: #2f363d; }
+
+/* ---------- /now (layouts/_default/now.html) ---------- */
+.now-updated { margin: 0 0 1.75rem; }
+.now > p:last-child { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
+
+/* ---------- 404 ---------- */
+.not-found-code {
+  margin: 0 0 .5rem; color: var(--accent); font-family: var(--font-mono);
+  font-size: clamp(4rem, 14vw, 6.5rem); font-weight: 800; line-height: 1; letter-spacing: -0.03em;
+}
+.not-found-links { display: flex; flex-wrap: wrap; gap: .6rem; margin: 0 0 2.5rem; }
+.not-found-other { margin: 0; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: .4rem; padding: .5rem .95rem;
+  color: var(--accent); background: var(--accent-soft);
+  border: 1px solid var(--accent-line); border-radius: 8px;
+  font-size: .95rem; text-decoration: none;
+}
+.btn:hover { border-color: var(--accent); }
+
 /* ---------- Alt kısım ---------- */
 .site-footer { border-top: 1px solid var(--border); padding: 2rem 0 2.5rem; text-align: center; }
 
@@ -459,6 +586,12 @@ main { padding: 2.5rem 0 3rem; }
   .avatar { width: 42px; height: 42px; }
   .post-nav { grid-template-columns: 1fr; }
   .post-nav .next { grid-column: 1; }
+  .project { padding: 1rem; }
+  .project-stats { grid-template-columns: 1fr 1fr; }
+  .about-intro { grid-template-columns: 88px 1fr; gap: 1rem; }
+  .about-photo { width: 88px; height: 88px; }
+  .about-greeting { font-size: 1.05rem; }
+  .stack-group { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

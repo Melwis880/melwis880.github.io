@@ -27,6 +27,28 @@ other = "Read this page in English"
 other = "Dijital kartvizit"
 [backHome]
 other = "Ana sayfaya dön"
+[email]
+other = "E-posta"
+[lastUpdated]
+other = "Güncellendi:"
+
+# Projeler (data/projects.yaml kind alanı)
+[project-own-tool]
+other = "Kendi aracım"
+[project-demo]
+other = "Demo"
+
+# 404. notFoundOther* diğer dilde yazılı.
+[notFoundTitle]
+other = "Aradığın sayfa burada yok."
+[notFoundText]
+other = "Taşınmış olabilir ya da link hatalı olabilir."
+[notFoundOther]
+other = "English: This page does not exist."
+[notFoundOtherHome]
+other = "Home"
+[notFoundOtherWriting]
+other = "Writing"
 [searchHint]
 other = "Ara (/ tuşu)"
 [searchPlaceholder]

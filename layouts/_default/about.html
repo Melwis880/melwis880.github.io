@@ -1,0 +1,30 @@
+{{- /*
+  Hakkımda sayfası (layout: about). Ön bilgi alanları:
+    heading:  sayfadaki büyük başlık ("$ whoami"); <title> ve menü .Title'ı kullanır
+    greeting: fotoğrafın yanındaki kısa selam (Markdown)
+    stack:    teknoloji rozetleri, [{group: "...", items: [...]}]; {{< stack >}} ile basılır
+  Gövdedeki bölümler Markdown'da; rozetler ve iletişim linkleri {{< stack >}} ve {{< contact >}}
+  kısa kodlarıyla gelir, böylece sıralama içerik dosyasında kalır.
+*/ -}}
+{{ define "main" }}
+<div class="container about" data-pagefind-meta="type:{{ i18n "type-page" }}">
+  {{- /* "$ whoami": $ işareti vurgulu ve ekran okuyucudan gizli. Aramada başlık .Title ("About"). */}}
+  {{- $heading := .Params.heading | default .Title }}
+  <h1 class="page-title about-title" data-pagefind-meta="title:{{ .Title }}">
+    {{- if hasPrefix $heading "$ " }}<span class="prompt" aria-hidden="true">$</span> {{ strings.TrimPrefix "$ " $heading }}{{ else }}{{ $heading }}{{ end -}}
+  </h1>
+  <div data-pagefind-body>
+    <div class="about-intro">
+      {{- /* En üstteki görsel: boyutu belli (CLS yok) ve lazy değil (LCP gecikmesin). */}}
+      {{- with site.Params.avatar }}{{ with resources.Get . }}
+      {{- $photo := .Fill "240x240 webp Center q85" }}
+      <img class="about-photo" src="{{ $photo.RelPermalink }}" width="120" height="120" alt="{{ site.Title }}" fetchpriority="high" decoding="async">
+      {{- end }}{{ end }}
+      {{- with .Params.greeting }}<p class="about-greeting">{{ . | markdownify }}</p>{{ end }}
+    </div>
+    <div class="prose">
+      {{ .Content }}
+    </div>
+  </div>
+</div>
+{{ end }}

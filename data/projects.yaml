@@ -1,0 +1,74 @@
+# Projeler sayfası (/projects/, /tr/projeler/) bu listeden çizilir: layouts/_default/projects.html.
+# Yeni proje = bu listeye yeni bir kayıt; sıra sayfadaki sıradır (en yeni üstte).
+# Sadece "~/Desktop/Ajanlarım /context.md" içindeki "Public proof" listesinde olan projeler girer.
+# Sayılar vaka analizindekilerle birebir aynı olmalı; ölçülmeyen bir şeyi sayı gibi yazma.
+#
+# Alanlar:
+#   name, year       kutu başlığı: "name (year)"
+#   icon             partials/site/icon.html içindeki bir simge adı
+#   kind             own-tool | demo  (etiket i18n'deki project-<kind> anahtarından gelir)
+#   repo             kaynak kodu linki
+#   case_study       vaka analizinin sayfa yolu; dildeki karşılığı kendiliğinden bulunur
+#   en / tr          dile göre metinler:
+#     problem        tek cümlelik sorun
+#     stats          ölçülmüş sonuçlar: value (kısa sayı) + label
+#     meta           tek satır: ne olduğu, test, CI, lisans
+#     note           isteğe bağlı: henüz ölçülmeyen ya da sınırlı olan şey
+
+- name: n8n-organizer
+  year: 2026
+  icon: workflow
+  kind: own-tool
+  repo: https://github.com/Melwis880/n8n-organizer
+  case_study: /post/n8n-organizer-case-study
+  en:
+    problem: >-
+      A public library of 2,047 n8n workflows (Zie619's collection, not mine) is only useful if
+      you can search it, and raw n8n JSON is long, noisy and full of duplicates.
+    stats:
+      - { value: "2,047", label: "workflows analysed" }
+      - { value: "1,973", label: "unique workflows written" }
+      - { value: "0", label: "errors" }
+      - { value: "~7 s", label: "per run" }
+    meta: "Rule-based Python CLI, no LLM · 123 tests · CI on Python 3.10-3.13 · MIT license"
+    note: "24 of 24 correct on an independent hand-checked sample (a check, not a benchmark)."
+  tr:
+    problem: >-
+      2.047 n8n iş akışından oluşan açık bir kütüphane (Zie619'un koleksiyonu, benim değil) ancak
+      içinde arama yapabilirsen işe yarar; ham n8n JSON'u ise uzun, gürültülü ve tekrarlarla dolu.
+    stats:
+      - { value: "2.047", label: "incelenen iş akışı" }
+      - { value: "1.973", label: "yazılan benzersiz iş akışı" }
+      - { value: "0", label: "hata" }
+      - { value: "~7 sn", label: "çalışma başına" }
+    meta: "Kural tabanlı Python CLI, LLM yok · 123 test · Python 3.10-3.13 üzerinde CI · MIT lisansı"
+    note: "Bağımsız, elle kontrol edilen bir örneklemde 24'te 24 doğru (bir kontrol, kıyaslama testi değil)."
+
+- name: flx
+  year: 2026
+  icon: terminal
+  kind: own-tool
+  repo: https://github.com/Melwis880/freelancer-cli
+  case_study: /post/flx-case-study
+  en:
+    problem: >-
+      AI and automation jobs on Freelancer.com are buried in noise, and finding the few worth
+      bidding on meant running the same searches by hand again and again.
+    stats:
+      - { value: "84", label: "jobs screened in the first agent run" }
+      - { value: "8 / 34 / 42", label: "bid / ask me / skip" }
+      - { value: "5", label: "proposal drafts the same day" }
+      - { value: "123", label: "tests" }
+    meta: "Read-only Python CLI + Claude Code agent · CI · MIT license"
+    note: "Not measured yet: time saved and bid outcomes. No bids sent so far."
+  tr:
+    problem: >-
+      Freelancer.com'daki yapay zeka ve otomasyon ilanları gürültünün içinde kayboluyor; teklif
+      vermeye değer birkaç ilanı bulmak için aynı aramaları elle tekrar tekrar yapmak gerekiyordu.
+    stats:
+      - { value: "84", label: "ilk ajan çalışmasında elenen ilan" }
+      - { value: "8 / 34 / 42", label: "teklif / bana sor / geç" }
+      - { value: "5", label: "aynı gün yazılan teklif taslağı" }
+      - { value: "123", label: "test" }
+    meta: "Salt okunur Python CLI + Claude Code ajanı · CI · MIT lisansı"
+    note: "Henüz ölçülmedi: kazanılan zaman ve teklif sonuçları. Şu ana kadar teklif gönderilmedi."

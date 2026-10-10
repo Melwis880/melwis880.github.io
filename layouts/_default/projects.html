@@ -1,0 +1,50 @@
+{{- /*
+  Projeler sayfası (layout: projects). Üstteki giriş metni sayfanın içeriğinden, kutular
+  data/projects.yaml'dan gelir (alanlar o dosyanın başında). Yeni proje eklemek için şablona
+  değil, data dosyasına bir kayıt eklenir.
+*/ -}}
+{{ define "main" }}
+{{- $lang := .Language.Lang }}
+{{- $page := . }}
+<div class="container" data-pagefind-meta="type:{{ i18n "type-page" }}">
+  <h1 class="page-title" data-pagefind-meta="title">{{ .Title }}</h1>
+  <div data-pagefind-body>
+    {{- with .Content }}<div class="page-lead">{{ . }}</div>{{ end }}
+    <ul class="project-list">
+      {{- range hugo.Data.projects }}
+      {{- $t := index . $lang }}
+      <li class="project">
+        <div class="project-head">
+          <span class="project-icon">{{ partial "site/icon.html" .icon }}</span>
+          <h2 class="project-title">{{ .name }} <span class="project-year">({{ .year }})</span></h2>
+          <span class="project-kind{{ if eq .kind "demo" }} is-demo{{ end }}">{{ i18n (printf "project-%s" .kind) }}</span>
+        </div>
+        {{- /* RenderString: Markdown ve tipografik tırnaklar (’) sayfanın geri kalanıyla aynı olsun. */}}
+        <p class="project-problem">{{ $page.RenderString $t.problem }}</p>
+        {{- with $t.stats }}
+        <ul class="project-stats">
+          {{- range . }}<li><strong>{{ .value }}</strong><span>{{ .label }}</span></li>{{ end }}
+        </ul>
+        {{- end }}
+        {{- with $t.meta }}<p class="project-meta">{{ . }}</p>{{ end }}
+        {{- with $t.note }}<p class="project-note">{{ $page.RenderString . }}</p>{{ end }}
+        {{- /* Vaka analizi sayfanın dilindeki karşılığına gider (site.GetPage o dilin sitesine bakar). */}}
+        {{- $case := false }}
+        {{- with .case_study }}
+          {{- with site.GetPage . }}{{ $case = . }}{{ else }}{{ warnf "data/projects.yaml: case study %q not found" . }}{{ end }}
+        {{- end }}
+        <p class="project-links">
+          {{- with $case }}
+          <a href="{{ .RelPermalink }}">{{ partial "site/icon.html" "case-study" }}{{ i18n "type-case-study" }}</a>
+          {{- end }}
+          {{- if and $case .repo }}<span aria-hidden="true">·</span>{{ end }}
+          {{- with .repo }}
+          <a href="{{ . }}" rel="noopener">{{ partial "site/icon.html" "github" }}GitHub</a>
+          {{- end }}
+        </p>
+      </li>
+      {{- end }}
+    </ul>
+  </div>
+</div>
+{{ end }}
