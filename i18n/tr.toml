@@ -1,17 +1,3 @@
-# Eski tema anahtarları (artık kullanılmayan şablonlar için duruyor)
-[postedBy]
-other = "Yazan:"
-[on]
-other = "·"
-[lastModified]
-other = "Son güncelleme:"
-[newerPosts]
-other = "Daha Yeni Yazılar"
-[olderPosts]
-other = "Daha Eski Yazılar"
-[featuredTags]
-other = "ÖNE ÇIKAN ETİKETLER"
-
 # Genel
 [skipToContent]
 other = "İçeriğe geç"

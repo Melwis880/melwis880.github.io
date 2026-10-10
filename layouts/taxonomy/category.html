@@ -1,4 +1,4 @@
-{{- /* Bir yazı türünün sayfası (/categories/field-note/ vb.). Tema dosyasının yerine geçer. */ -}}
+{{- /* Bir yazı türünün sayfası (/categories/field-note/ vb.). */ -}}
 {{ define "main" }}
 <div class="container">
   <h1 class="page-title">{{ i18n (printf "type-%s-plural" .Data.Term) | default .Title }}</h1>

@@ -1,4 +1,4 @@
-{{- /* Etiket ve kategori listeleri (/tags/, /categories/). Tema dosyasının yerine geçer. */ -}}
+{{- /* Etiket ve kategori listeleri (/tags/, /categories/). */ -}}
 {{ define "main" }}
 <div class="container">
   <h1 class="page-title">{{ if eq .Data.Plural "categories" }}{{ i18n "postTypes" }}{{ else }}{{ i18n "allTags" }}{{ end }}</h1>

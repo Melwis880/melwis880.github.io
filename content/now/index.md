@@ -4,6 +4,9 @@ description: "What M. Meriç Ordu is focused on right now."
 url: "/now/"
 # Şablon: layouts/_default/now.html. Güncellerken lastmod'u da değiştir; sayfanın üstünde görünür.
 layout: now
+# date: yayın tarihi, sabit kalır. Yoksa Hugo lastmod'u yayın tarihi sayar ve lastmod CI saatine
+# (UTC) göre gelecekteyse sayfa build'den düşer. Aylık güncellemede sadece lastmod değişir.
+date: 2026-10-10
 lastmod: 2026-10-10
 ---
 

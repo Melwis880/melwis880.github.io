@@ -53,6 +53,9 @@ home = ["HTML", "RSS"]
     label = "Türkçe"
     locale = "tr-TR"
     weight = 2
+    # GitHub Pages sadece kökteki /404.html'i sunar (Türkçe satır onun içinde). /tr/404.html hiç
+    # 404 olarak gösterilmiyordu, kök 404'ün dil düğmesi de oraya gidiyordu; artık /tr/'ye gider.
+    disableKinds = ["404"]
     [languages.tr.params]
       SEOTitle = "Yapay Zeka Otomasyon Danışmanı"
       description = "Yapay zeka otomasyon danışmanı ve Bilgisayar Mühendisliği öğrencisi. KOBİ'lerin ve profesyonellerin elle yaptığı işleri azaltan n8n, API ve LLM otomasyonları üzerine vaka analizleri."
