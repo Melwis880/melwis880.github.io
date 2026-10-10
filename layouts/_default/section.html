@@ -1,0 +1,8 @@
+{{- /* Kendi şablonu olmayan bölümler için genel liste (ör. ileride notes/). */ -}}
+{{ define "main" }}
+<div class="container">
+  <h1 class="page-title">{{ .Title }}</h1>
+  {{- with .Content }}<div class="page-lead">{{ . }}</div>{{ end }}
+  <ul class="post-list">{{ range .Pages }}{{ partial "site/post-row.html" . }}{{ end }}</ul>
+</div>
+{{ end }}

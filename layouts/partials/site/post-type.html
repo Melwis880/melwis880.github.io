@@ -1,0 +1,12 @@
+{{- /*
+  Bir yazının türünü döndürür: ilk kategorisi (case-study, field-note, research) ya da
+  notes bölümündeyse "note". Hiçbiri yoksa "post".
+  Kullanım: {{ $type := partial "site/post-type.html" . }}
+*/ -}}
+{{- $type := "post" -}}
+{{- if eq .Section "notes" -}}
+  {{- $type = "note" -}}
+{{- else -}}
+  {{- with .Params.categories -}}{{- $type = index . 0 -}}{{- end -}}
+{{- end -}}
+{{- return $type -}}

@@ -1,0 +1,12 @@
+{{- /*
+  Bilgi kutusu. Kullanım:
+    {{< callout type="note" >}}Markdown metin{{< /callout >}}
+    {{< callout type="warning" title="Dikkat" >}}...{{< /callout >}}
+  type: note (varsayılan) | tip | warning. title verilmezse türün adı yazılır.
+*/ -}}
+{{- $type := .Get "type" | default "note" -}}
+{{- $icon := index (dict "note" "info" "tip" "tip" "warning" "warning") $type | default "info" -}}
+<div class="callout {{ $type }}">
+  <p class="callout-title">{{ partial "site/icon.html" $icon }}{{ .Get "title" | default (i18n (printf "callout-%s" $type)) }}</p>
+  {{ .Inner | .Page.RenderString (dict "display" "block") }}
+</div>

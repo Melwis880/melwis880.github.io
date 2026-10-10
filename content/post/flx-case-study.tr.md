@@ -1,9 +1,10 @@
 ---
-title: "Vaka analizi: flx, temiz bir ilan akışı ve yapay zeka teklif ajanı"
+title: "flx: temiz bir ilan akışı ve yapay zeka teklif ajanı"
 subtitle: "Gürültülü Freelancer.com aramalarından tek çalışmada elenen 84 ilana"
 description: "Freelancer.com API'si için salt okunur bir Python komut satırı aracını ve üzerinde ilanları eleyip teklif taslağı yazan bir Claude Code ajanını nasıl kurdum. Kendi aracım, müşteri işi değil."
 date: 2026-10-08
 categories: ["case-study"]
+ai_use: draft
 tags: ["python", "ai-agents", "claude-code", "automation"]
 ---
 

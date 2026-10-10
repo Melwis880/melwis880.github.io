@@ -1,20 +1,125 @@
+# Eski tema anahtarları (artık kullanılmayan şablonlar için duruyor)
 [postedBy]
 other = "Yazan:"
 [on]
 other = "·"
 [lastModified]
 other = "Son güncelleme:"
-[previousPost]
-other = "Önceki Yazı"
-[nextPost]
-other = "Sonraki Yazı"
 [newerPosts]
 other = "Daha Yeni Yazılar"
 [olderPosts]
 other = "Daha Eski Yazılar"
 [featuredTags]
 other = "ÖNE ÇIKAN ETİKETLER"
+
+# Genel
+[skipToContent]
+other = "İçeriğe geç"
+[mainMenu]
+other = "Ana menü"
 [search]
 other = "Ara"
+[toggleTheme]
+other = "Açık/koyu temayı değiştir"
 [switchLanguage]
 other = "Read this page in English"
+[businessCard]
+other = "Dijital kartvizit"
+[backHome]
+other = "Ana sayfaya dön"
+[searchHint]
+other = "Ara (/ tuşu)"
+[searchPlaceholder]
+other = "Yazılarda ve sayfalarda ara"
+[searchClose]
+other = "Aramayı kapat"
+[searchLoading]
+other = "Aranıyor..."
+[searchNone]
+other = "“%s” için sonuç bulunamadı. Başka bir kelime dene."
+[searchAll]
+other = "Tüm sonuçlar"
+[searchCountOne]
+other = "1 sonuç"
+[searchCountMany]
+other = "%s sonuç"
+[searchUnavailable]
+other = "Arama dizini site yayınlanırken oluşturuluyor; arama yalnızca canlı sitede çalışır."
+[searchNoScript]
+other = "Arama için JavaScript gerekli."
+[loadMore]
+other = "Daha fazla göster"
+[copy]
+other = "Kopyala"
+[copied]
+other = "Kopyalandı"
+
+# Ana sayfa ve listeler
+[startHere]
+other = "Buradan başla"
+[recentWriting]
+other = "Son yazılar"
+[allWriting]
+other = "Tüm yazılar"
+[moreSoon]
+other = "Yeni yazılar yolda."
+[allTypes]
+other = "Tümü"
+[filterByType]
+other = "Türe göre filtrele"
+[postTypes]
+other = "Yazı türleri"
+[tag]
+other = "Etiket"
+[allTags]
+other = "Tüm etiketler"
+
+# Yazı türleri (categories değerleri + notes bölümü)
+[type-field-note]
+other = "Saha notu"
+[type-research]
+other = "Araştırma notu"
+[type-case-study]
+other = "Vaka analizi"
+[type-note]
+other = "Not"
+[type-post]
+other = "Yazı"
+[type-page]
+other = "Sayfa"
+[type-field-note-plural]
+other = "Saha notları"
+[type-research-plural]
+other = "Araştırma notları"
+[type-case-study-plural]
+other = "Vaka analizleri"
+
+# Yazı sayfası
+[minRead]
+other = "{{ .Count }} dk okuma"
+[contents]
+other = "İçindekiler"
+[updatedOn]
+other = "Güncellendi:"
+[updates]
+other = "Güncellemeler"
+[previousPost]
+other = "Önceki yazı"
+[nextPost]
+other = "Sonraki yazı"
+[morePosts]
+other = "Diğer yazılar"
+[authorNote]
+other = "Ben Meriç; yapay zeka otomasyon danışmanı ve Bilgisayar Mühendisliği öğrencisiyim. <a href=\"{{ .about }}\">Hakkımda daha fazlası</a>. Benzer bir sorunun mu var? <a href=\"mailto:{{ .email }}\">Bana yaz</a>."
+[aiNote-edit]
+other = "Bu yazıyı ben yazdım. Düzelti ve çeviride yapay zeka kullandım."
+[aiNote-draft]
+other = "Kendi notlarımdan ve proje verilerimden yapay zekayla taslak çıkarıldı; kontrol edip düzenleyen benim."
+
+# Bilgi kutuları
+[callout-note]
+other = "Not"
+[callout-tip]
+other = "İpucu"
+[callout-warning]
+other = "Dikkat"

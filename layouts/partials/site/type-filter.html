@@ -1,0 +1,9 @@
+{{- /* Yazı türü filtreleri: "Tümü" + yazısı olan her kategori, yazı sayısıyla.
+     Girdi: (dict "page" . "current" "<şu anki kategori ya da boş>") */ -}}
+{{- $current := .current }}
+<ul class="filter-links" aria-label="{{ i18n "filterByType" }}">
+  <li><a class="chip" href="{{ "post/" | relLangURL }}"{{ if eq $current "" }} aria-current="page"{{ end }}>{{ i18n "allTypes" }}</a></li>
+  {{- range site.Taxonomies.categories.ByCount }}
+  <li><a class="chip" href="{{ .Page.RelPermalink }}"{{ if eq .Name $current }} aria-current="page"{{ end }}>{{ partial "site/icon.html" .Name }}{{ i18n (printf "type-%s" .Name) }} <span class="count">{{ .Count }}</span></a></li>
+  {{- end }}
+</ul>

@@ -1,9 +1,10 @@
 ---
-title: "Case study: flx, a clean job feed and an AI bidding agent"
+title: "flx: a clean job feed and an AI bidding agent"
 subtitle: "From noisy Freelancer.com searches to 84 jobs screened in one run"
 description: "How I built a read-only Python CLI for the Freelancer.com API and a Claude Code agent on top that screens jobs and drafts proposals. Own tool, not client work."
 date: 2026-10-08
 categories: ["case-study"]
+ai_use: draft
 tags: ["python", "ai-agents", "claude-code", "automation"]
 ---
 

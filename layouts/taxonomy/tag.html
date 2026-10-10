@@ -1,0 +1,9 @@
+{{- /* Bir etiketin sayfası (/tags/n8n/ vb.). Tema dosyasının yerine geçer. */ -}}
+{{ define "main" }}
+<div class="container">
+  <p class="type-label">{{ i18n "tag" }}</p>
+  <h1 class="page-title mono">#{{ .Title | lower }}</h1>
+  <ul class="post-list">{{ range .Pages }}{{ partial "site/post-row.html" . }}{{ end }}</ul>
+  <a class="more-link" href="{{ "tags/" | relLangURL }}">{{ i18n "allTags" }} →</a>
+</div>
+{{ end }}

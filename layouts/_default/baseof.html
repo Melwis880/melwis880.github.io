@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+{{- /* Sitenin temel iskeleti. CleanWhite temasının baseof'u yerine geçer; tema klasörü
+     şimdilik yerinde duruyor ama onun Bootstrap/jQuery tabanlı parçaları artık çağrılmıyor.
+     data-copy / data-copied: assets/js/site.js içindeki Kopyala butonunun metinleri. */ -}}
+<html lang="{{ site.Language.Lang }}" data-theme="dark" data-copy="{{ i18n "copy" }}" data-copied="{{ i18n "copied" }}">
+{{ partial "site/head.html" . }}
+<body>
+  {{ partial "site/header.html" . }}
+  <main id="main">
+    {{ block "main" . }}{{ end }}
+  </main>
+  {{ partial "site/footer.html" . }}
+</body>
+</html>

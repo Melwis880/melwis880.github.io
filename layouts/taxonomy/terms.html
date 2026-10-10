@@ -1,0 +1,13 @@
+{{- /* Etiket ve kategori listeleri (/tags/, /categories/). Tema dosyasının yerine geçer. */ -}}
+{{ define "main" }}
+<div class="container">
+  <h1 class="page-title">{{ if eq .Data.Plural "categories" }}{{ i18n "postTypes" }}{{ else }}{{ i18n "allTags" }}{{ end }}</h1>
+  <ul class="filter-links">
+    {{- range .Data.Terms.Alphabetical }}
+    <li><a class="chip" href="{{ .Page.RelPermalink }}">
+      {{- if eq $.Data.Plural "categories" }}{{ partial "site/icon.html" .Name }}{{ i18n (printf "type-%s" .Name) }}{{ else }}#{{ .Name }}{{ end }}
+      <span class="count">{{ .Count }}</span></a></li>
+    {{- end }}
+  </ul>
+</div>
+{{ end }}

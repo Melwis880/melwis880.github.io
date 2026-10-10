@@ -1,0 +1,60 @@
+<a class="skip-link" href="#main">{{ i18n "skipToContent" }}</a>
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="{{ "/" | relLangURL }}">
+      {{- with site.Params.sidebar_avatar }}{{ with resources.Get . }}
+      {{- $avatar := .Fill "96x96 webp Center q85" }}
+      <img class="avatar" src="{{ $avatar.RelPermalink }}" width="48" height="48" alt="">
+      {{- end }}{{ end }}
+      <span>
+        <span class="brand-name">{{ site.Title }}</span>
+        {{- with site.Params.tagline }}<span class="brand-tagline">{{ . }}</span>{{ end }}
+      </span>
+    </a>
+
+    <nav class="site-nav" aria-label="{{ i18n "mainMenu" }}">
+      {{- $current := .RelPermalink }}
+      {{- range site.Menus.main }}
+        {{- $url := .URL | relURL }}
+        <a class="nav-link" href="{{ $url }}"{{ if hasPrefix $current $url }} aria-current="page"{{ end }}>{{ .Name }}</a>
+      {{- end }}
+      {{- /* JS varsa menüyü arama kutusuna çevirir (assets/js/search.js); yoksa arama sayfasına gider. */}}
+      <a class="icon-btn search-toggle" href="{{ "search/" | relLangURL }}" aria-label="{{ i18n "search" }}" title="{{ i18n "searchHint" }}" aria-keyshortcuts="/">{{ partial "site/icon.html" "search" }}</a>
+      <button class="icon-btn theme-toggle" type="button" aria-label="{{ i18n "toggleTheme" }}" title="{{ i18n "toggleTheme" }}">
+        {{- partial "site/icon.html" "sun" }}{{ partial "site/icon.html" "moon" -}}
+      </button>
+      {{- /* Dil düğmesi: sayfanın diğer dildeki çevirisine gider, çevirisi yoksa o dilin ana sayfasına. */}}
+      {{- $page := . }}
+      {{- range site.Home.AllTranslations }}
+        {{- if ne .Language.Lang $page.Language.Lang }}
+          {{- $lang := .Language.Lang }}
+          {{- $target := .RelPermalink }}
+          {{- range $page.Translations }}{{ if eq .Language.Lang $lang }}{{ $target = .RelPermalink }}{{ end }}{{ end }}
+      <a class="icon-btn" href="{{ $target }}" hreflang="{{ $lang }}" lang="{{ $lang }}" aria-label="{{ i18n "switchLanguage" }}" title="{{ i18n "switchLanguage" }}">{{ partial "site/icon.html" "globe" }}<span class="lang-code">{{ upper $lang }}</span></a>
+        {{- end }}
+      {{- end }}
+    </nav>
+
+    {{- $strings := dict
+      "loading" (i18n "searchLoading")
+      "none" (i18n "searchNone")
+      "all" (i18n "searchAll")
+      "countOne" (i18n "searchCountOne")
+      "countOther" (i18n "searchCountMany")
+      "unavailable" (i18n "searchUnavailable") }}
+    <div class="site-search" id="site-search" hidden
+         data-pagefind="{{ "pagefind/pagefind.js" | relURL }}"
+         data-search-page="{{ "search/" | relLangURL }}"
+         data-strings="{{ $strings | jsonify }}">
+      <form class="search-form" action="{{ "search/" | relLangURL }}" role="search">
+        {{ partial "site/icon.html" "search" }}
+        <input type="search" name="q" autocomplete="off" spellcheck="false"
+               placeholder="{{ i18n "searchPlaceholder" }}" aria-label="{{ i18n "search" }}"
+               role="combobox" aria-expanded="false" aria-controls="search-panel" aria-autocomplete="list">
+        <kbd>Esc</kbd>
+        <button class="icon-btn search-close" type="button" aria-label="{{ i18n "searchClose" }}">✕</button>
+      </form>
+      <div class="search-panel" id="search-panel" role="listbox" hidden></div>
+    </div>
+  </div>
+</header>

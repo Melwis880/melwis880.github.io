@@ -1,0 +1,16 @@
+{{- /* Yazı listelerindeki tek satır: tür simgesi, başlık, tarih · tür · okuma süresi, tek satır özet. */ -}}
+{{- $type := partial "site/post-type.html" . -}}
+<li class="post-row">
+  <span class="post-row-icon" title="{{ i18n (printf "type-%s" $type) }}">{{ partial "site/icon.html" $type }}</span>
+  <div>
+    <h3 class="post-row-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+    <div class="meta">
+      <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
+      <span>{{ i18n (printf "type-%s" $type) }}</span>
+      <span>{{ i18n "minRead" .ReadingTime }}</span>
+    </div>
+    {{- /* Tek satır özet: summary > subtitle > description > metnin başı. */}}
+    {{- $summary := .Params.summary | default .Params.subtitle | default .Description | default (.Summary | plainify | truncate 160) }}
+    {{- with $summary }}<p class="post-row-summary">{{ . }}</p>{{ end }}
+  </div>
+</li>

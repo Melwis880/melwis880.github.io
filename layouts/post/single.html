@@ -1,137 +1,85 @@
-{{ define "header" }}
-<style type="text/css">
-    header.intro-header {
-        background-image: url('{{ if .Params.image }}{{ partial "webp-image.html" .Params.image | safeURL }}{{ else }}{{ partialCached "webp-image.html" .Site.Params.header_image .Site.Params.header_image | safeURL }}{{ end }}')
-    }
-</style>
-{{ if eq .Params.headerstyle "text" }}
-<header class="intro-header style-text" >
-{{ else }}
-<header class="intro-header" >
-{{ end }}
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-                <div class="post-heading">
-                    <div class="tags">
-                        {{ range .Params.tags }}
-                        <a class="tag" href="{{ "/tags/" | relLangURL }}{{ . | urlize }}" title="{{ . }}">
-                            {{ . }}
-                        </a>
-                        {{ end }}
-                    </div>
-                    <h1>{{ .Title }}</h1>
-                    <h2 class="subheading">{{ .Params.subtitle }}</h2>
-                    <span class="meta">
-                        {{ i18n "postedBy" }}
-                        {{ if .Params.author }}{{ .Params.author }}{{ else }}{{ .Site.Title }}{{ end }}
-                        {{ i18n "on" }} {{ .Date | time.Format ":date_full" }}
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-</header>
-{{ end }}
-
+{{- /*
+  Yazı sayfası. Ön bilgi (front matter) alanları:
+    categories: [case-study | field-note | research]  yazının türü
+    subtitle:   başlık altı cümle
+    toc:        true/false; verilmezse 3 ve üstü ## başlıkta İçindekiler kendiliğinden açılır
+    ai_use:     edit | draft  yazının altına yapay zeka kullanım notu (verilmezse not yok)
+    updates:    [{date: 2026-10-20, note: "..."}]  tarihli düzeltme notları
+*/ -}}
 {{ define "main" }}
+{{- $type := partial "site/post-type.html" . }}
+{{- $showToc := ge (len (findRE `<h2[ >]` .Content)) 3 }}
+{{- if isset .Params "toc" }}{{ $showToc = .Params.toc }}{{ end }}
 
-<div class="container" style="margin-top: 30px;">
-    <div class="row">
-        <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-            <nav aria-label="breadcrumb" style="background: #fff; padding: 12px 20px; border: 1px solid #eee; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                <ol class="breadcrumb" style="margin-bottom: 0; background-color: transparent; padding: 0; list-style: none; display: flex; align-items: center; font-size: 13.5px;">
-                    
-                    <li>
-                        <a href="{{ .Site.BaseURL | relLangURL }}">
-                            <i class="fa fa-home"></i> Home
-                        </a>
-                    </li>
-
-                    {{ range (split .RelPermalink "/") }}
-                        {{ if and (ne . "") (ne . "post") }}
-                            <li>
-                                <a href="{{ "/" | relLangURL }}{{ . | urlize }}">
-                                    {{ . | humanize | upper }}
-                                </a>
-                            </li>
-                        {{ end }}
-                    {{ end }}
-                </ol>
-            </nav>
-        </div>
+{{- /* data-pagefind-meta: arama sonuçlarında tür ve tarih gösterilir (assets/js/search.js).
+     Pagefind her öğede tek bir anahtar okuyor; tür ve tarih bu yüzden ayrı öğelerde. */}}
+<div class="post-layout{{ if $showToc }} has-toc{{ end }}" data-pagefind-meta="type:{{ i18n (printf "type-%s" $type) }}">
+  <header class="post-header container">
+    {{- with site.GetPage (printf "/categories/%s" $type) }}
+    <a class="type-label" href="{{ .RelPermalink }}">{{ partial "site/icon.html" $type }}{{ i18n (printf "type-%s" $type) }}</a>
+    {{- else }}
+    <span class="type-label">{{ partial "site/icon.html" $type }}{{ i18n (printf "type-%s" $type) }}</span>
+    {{- end }}
+    <h1 class="post-title" data-pagefind-meta="title">{{ .Title }}</h1>
+    {{- with .Params.subtitle }}<p class="post-subtitle">{{ . }}</p>{{ end }}
+    <div class="meta">
+      <time datetime="{{ .Date.Format "2006-01-02" }}" data-pagefind-meta="date:{{ .Date.Format "2006-01-02" }}">{{ .Date | time.Format ":date_long" }}</time>
+      <span>{{ i18n "minRead" .ReadingTime }}</span>
+      {{- with .Params.updates }}{{ with index (last 1 .) 0 }}
+      <span>{{ i18n "updatedOn" }} {{ time.Format ":date_long" .date }}</span>
+      {{- end }}{{ end }}
     </div>
+    {{- with .GetTerms "tags" }}
+    <ul class="tags">{{ range . }}<li><a href="{{ .RelPermalink }}">#{{ .LinkTitle | lower }}</a></li>{{ end }}</ul>
+    {{- end }}
+  </header>
+
+  {{- if $showToc }}
+  <aside class="toc-column container">
+    <details class="toc">
+      <summary>{{ i18n "contents" }}</summary>
+      {{ .TableOfContents }}
+    </details>
+  </aside>
+  {{- end }}
+
+  <div class="post-body container">
+    <div class="prose" data-pagefind-body>
+      {{ .Content }}
+    </div>
+
+    <footer class="post-footer">
+      {{- with .Params.updates }}
+      <section class="updates">
+        <h2>{{ i18n "updates" }}</h2>
+        <ul>{{ range . }}<li><time datetime="{{ time.Format "2006-01-02" .date }}">{{ time.Format ":date_medium" .date }}</time>: {{ .note | markdownify }}</li>{{ end }}</ul>
+      </section>
+      {{- end }}
+
+      <div class="author-note">
+        {{- with site.Params.sidebar_avatar }}{{ with resources.Get . }}
+        {{- $a := .Fill "96x96 webp Center q85" }}<img src="{{ $a.RelPermalink }}" width="48" height="48" alt="">
+        {{- end }}{{ end }}
+        {{- /* Hakkımda sayfasının dildeki adresi (/about/, /tr/hakkimda/) sayfanın kendisinden alınır. */}}
+        {{- $about := "" }}{{ with site.GetPage "/hakkimda" }}{{ $about = .RelPermalink }}{{ end }}
+        <p>{{ i18n "authorNote" (dict "email" site.Params.social.email "about" $about) | safeHTML }}</p>
+      </div>
+      {{- with .Params.ai_use }}<p class="ai-note">{{ i18n (printf "aiNote-%s" .) }}</p>{{ end }}
+
+      {{- /* Önceki = daha eski, sonraki = daha yeni yazı (aynı bölümde, tarihe göre). */}}
+      {{- $older := false }}{{ $newer := false }}{{ $found := false }}
+      {{- range (where site.RegularPages "Section" .Section).ByDate }}
+        {{- if $found }}{{ if not $newer }}{{ $newer = . }}{{ end }}
+        {{- else if eq . $ }}{{ $found = true }}
+        {{- else }}{{ $older = . }}{{ end }}
+      {{- end }}
+      {{- if or $older $newer }}
+      <nav class="post-nav" aria-label="{{ i18n "morePosts" }}">
+        {{- with $older }}<a class="prev" href="{{ .RelPermalink }}"><span>← {{ i18n "previousPost" }}</span>{{ .Title }}</a>{{ end }}
+        {{- with $newer }}<a class="next" href="{{ .RelPermalink }}"><span>{{ i18n "nextPost" }} →</span>{{ .Title }}</a>{{ end }}
+      </nav>
+      {{- end }}
+    </footer>
+  </div>
 </div>
-
-<style>
-/* 1. RENK AYARLARI (GÜÇLENDİRİLMİŞ SEÇİCİLER) */
-
-/* Normal Durum: Koyu Gri (#404040) */
-.breadcrumb li a {
-    color: #404040 !important; 
-    text-decoration: none !important;
-    font-weight: 500;
-    transition: color 0.2s ease;
-}
-
-/* Home İkonu Rengi */
-.breadcrumb li a i {
-    color: #404040 !important;
-}
-
-/* Hover (Üzerine Gelince) Durumu: Turuncu (#ff9800) */
-.breadcrumb li a:hover {
-    color: #ff9800 !important;
-}
-
-.breadcrumb li a:hover i {
-    color: #ff9800 !important;
-}
-
-/* 2. TEK ÇİZGİ AYARI */
-/* Her elemanın arasına gri, tek bir çizgi koy */
-.breadcrumb > li + li:before {
-    content: "/" !important;
-    padding: 0 8px !important;
-    color: #ccc !important; /* Açık gri çizgi rengi */
-}
-</style>
-
-<article>
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 post-container">
-                <div data-pagefind-body>
-                    {{ .Content }}
-                </div>
-
-                {{ if .Site.Params.reward }}
-                {{ partial "reward.html" . }}
-                {{ end }}
-
-                {{ partial "comments.html" . }}
-            </div>
-
-            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 sidebar-container">
-                {{ if .Site.Params.featured_tags }}
-                <section>
-                    <hr class="hidden-sm hidden-xs">
-                    <h5><a href="{{ "tags/" | relLangURL }}">{{ i18n "featuredTags" }}</a></h5>
-                    <div class="tags">
-                        {{ $featured_condition_size := .Site.Params.featured_condition_size }}
-                        {{ range $name, $taxonomy := .Site.Taxonomies.tags }}
-                        {{ if gt (len $taxonomy.Pages) $featured_condition_size }}
-                        <a href="{{ "/tags/" | relLangURL }}{{ $name | urlize }}" title="{{ $name }}">
-                            {{ $name }}
-                        </a>
-                        {{ end }}
-                        {{ end }}
-                    </div>
-                </section>
-                {{ end }}
-            </div>
-        </div>
-    </div>
-</article>
-
 {{ end }}

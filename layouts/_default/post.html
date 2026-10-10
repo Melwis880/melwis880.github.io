@@ -1,0 +1,3 @@
+{{- /* Temanın _default/post.html dosyası, bölüm adı "post" olduğu için /post/ listesinde
+     post/list.html'in önüne geçiyor. Aynı yolda site seviyesinde geçersiz kılıyoruz. */ -}}
+{{ define "main" }}{{ partial "site/writing-list.html" . }}{{ end }}

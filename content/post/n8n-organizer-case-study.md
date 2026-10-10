@@ -1,9 +1,10 @@
 ---
-title: "Case study: turning 2,047 n8n workflows into a searchable knowledge base"
+title: "Turning 2,047 n8n workflows into a searchable knowledge base"
 subtitle: "And why the newest version of the data was the real problem"
 description: "A rule-based Python CLI that turns the public Zie619 n8n workflow collection into three clean, NotebookLM-ready files: 1,973 unique workflows, 0 errors, about 7 seconds. Own tool, not client work."
 date: 2026-10-09
 categories: ["case-study"]
+ai_use: draft
 tags: ["n8n", "python", "automation", "knowledge-base"]
 ---
 

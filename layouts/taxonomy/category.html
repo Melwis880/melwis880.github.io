@@ -1,0 +1,8 @@
+{{- /* Bir yazı türünün sayfası (/categories/field-note/ vb.). Tema dosyasının yerine geçer. */ -}}
+{{ define "main" }}
+<div class="container">
+  <h1 class="page-title">{{ i18n (printf "type-%s-plural" .Data.Term) | default .Title }}</h1>
+  {{ partial "site/type-filter.html" (dict "page" . "current" .Data.Term) }}
+  <ul class="post-list">{{ range .Pages }}{{ partial "site/post-row.html" . }}{{ end }}</ul>
+</div>
+{{ end }}

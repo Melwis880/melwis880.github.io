@@ -1,0 +1,17 @@
+<footer class="site-footer">
+  <div class="container">
+    {{- $s := site.Params.social }}
+    <ul class="social">
+      {{- with $s.email }}<li><a class="s-email" href="mailto:{{ . }}" aria-label="Email" title="Email">{{ partial "site/icon.html" "mail" }}</a></li>{{ end }}
+      {{- with $s.linkedin }}<li><a class="s-linkedin" href="{{ . }}" rel="me noopener" aria-label="LinkedIn" title="LinkedIn">{{ partial "site/icon.html" "linkedin" }}</a></li>{{ end }}
+      {{- with $s.github }}<li><a class="s-github" href="{{ . }}" rel="me noopener" aria-label="GitHub" title="GitHub">{{ partial "site/icon.html" "github" }}</a></li>{{ end }}
+      {{- with $s.twitter }}<li><a class="s-x" href="{{ . }}" rel="me noopener" aria-label="X" title="X">{{ partial "site/icon.html" "x" }}</a></li>{{ end }}
+      {{- if $s.rss }}{{ with site.Home.OutputFormats.Get "rss" }}<li><a class="s-rss" href="{{ .RelPermalink }}" aria-label="RSS" title="RSS">{{ partial "site/icon.html" "rss" }}</a></li>{{ end }}{{ end }}
+    </ul>
+    <p class="footer-links">
+      {{- /* /kart/ tek dilli statik bir sayfa: relLangURL değil relURL. */}}
+      <a href="{{ "kart/" | relURL }}">{{ i18n "businessCard" }}</a>
+      · © {{ now.Year }} {{ site.Title }}
+    </p>
+  </div>
+</footer>

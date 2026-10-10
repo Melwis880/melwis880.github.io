@@ -1,9 +1,10 @@
 ---
-title: "Vaka analizi: 2.047 n8n iş akışını aranabilir bir bilgi tabanına dönüştürmek"
+title: "2.047 n8n iş akışını aranabilir bir bilgi tabanına dönüştürmek"
 subtitle: "Asıl sorunun verinin en yeni sürümü olduğu ortaya çıktı"
 description: "Açık Zie619 n8n iş akışı koleksiyonunu NotebookLM'e hazır üç temiz dosyaya dönüştüren kural tabanlı bir Python komut satırı aracı: 1.973 benzersiz iş akışı, 0 hata, yaklaşık 7 saniye. Kendi aracım, müşteri işi değil."
 date: 2026-10-09
 categories: ["case-study"]
+ai_use: draft
 tags: ["n8n", "python", "automation", "knowledge-base"]
 ---
 

@@ -1,0 +1,16 @@
+{{- /* Arama sayfası (/search/?q=...). Sonuçları assets/js/search.js çizer; Pagefind dizini CI'da
+     build'den sonra oluşturulur, yerelde yoksa sayfa kısa bir not gösterir. */ -}}
+{{ define "main" }}
+<div class="container" id="search-page">
+  <h1 class="page-title">{{ .Title }}</h1>
+  <form class="search-form search-form-page" action="" role="search">
+    {{ partial "site/icon.html" "search" }}
+    <input type="search" name="q" autocomplete="off" spellcheck="false" autofocus
+           placeholder="{{ i18n "searchPlaceholder" }}" aria-label="{{ i18n "search" }}">
+  </form>
+  <p class="search-status" aria-live="polite"></p>
+  <ol class="search-results"></ol>
+  <button class="chip load-more" type="button" hidden>{{ i18n "loadMore" }}</button>
+  <noscript><p class="search-status">{{ i18n "searchNoScript" }}</p></noscript>
+</div>
+{{ end }}

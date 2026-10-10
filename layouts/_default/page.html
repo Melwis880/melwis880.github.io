@@ -1,0 +1,9 @@
+{{- /* layout: page kullanan sayfalar (Hakkımda, Projeler). Şimdilik genel sayfa şablonuyla aynı. */ -}}
+{{ define "main" }}
+<div class="container" data-pagefind-meta="type:{{ i18n "type-page" }}">
+  <h1 class="page-title" data-pagefind-meta="title">{{ .Title }}</h1>
+  <div class="prose" data-pagefind-body>
+    {{ .Content }}
+  </div>
+</div>
+{{ end }}

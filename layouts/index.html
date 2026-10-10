@@ -1,0 +1,38 @@
+{{- /*
+  Ana sayfa. Metin content/_index.md (ve _index.tr.md) dosyasından gelir:
+    headline:   tek cümlelik konumlandırma (Markdown, **isim** vurgulanır)
+    start_here: "Buradan başla" listesi, yazı yolları (ör. "/post/flx-case-study")
+  Gövde: madde madde tanıtım. Altta, "Buradan başla"da olmayan son yazılar listelenir.
+*/ -}}
+{{ define "main" }}
+<div class="container">
+  <section class="hero">
+    {{- with .Params.headline }}<h1>{{ . | markdownify }}</h1>{{ end }}
+    <div class="hero-points">{{ .Content }}</div>
+  </section>
+
+  {{- $start := slice }}
+  {{- range .Params.start_here }}{{ with site.GetPage . }}{{ $start = $start | append . }}{{ end }}{{ end }}
+  {{- with $start }}
+  <section class="section" aria-labelledby="start-here">
+    <h2 class="section-title" id="start-here">{{ i18n "startHere" }}</h2>
+    <ul class="post-list">{{ range . }}{{ partial "site/post-row.html" . }}{{ end }}</ul>
+  </section>
+  {{- end }}
+
+  {{- $posts := where site.RegularPages "Section" "in" (slice "post" "notes") }}
+  {{- $recent := slice }}
+  {{- range $posts }}{{ if not (in $start .) }}{{ $recent = $recent | append . }}{{ end }}{{ end }}
+  <section class="section" aria-labelledby="recent">
+    <h2 class="section-title" id="recent">
+      <span>{{ i18n "recentWriting" }}</span>
+      <a href="{{ "post/" | relLangURL }}">{{ i18n "allWriting" }} →</a>
+    </h2>
+    {{- with first 6 $recent }}
+    <ul class="post-list">{{ range . }}{{ partial "site/post-row.html" . }}{{ end }}</ul>
+    {{- else }}
+    <p class="page-lead">{{ i18n "moreSoon" }}</p>
+    {{- end }}
+  </section>
+</div>
+{{ end }}
