@@ -7,7 +7,7 @@ aliases: ["/hakkimda/"]
 layout: about
 heading: "$ whoami"
 greeting: "**Hi, I'm Meriç.** I take repetitive work off small teams with AI automation."
-# Sadece gerçekten kullanılan araçlar ("~/Desktop/Ajanlarım /context.md").
+# Sadece gerçekten kullanılan araçlar (repo dışındaki özel profil notlarına göre).
 stack:
   - group: "Code & automation"
     items: ["Python", "n8n", "Claude Code"]

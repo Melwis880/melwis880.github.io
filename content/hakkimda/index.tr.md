@@ -6,7 +6,7 @@ url: "/tr/hakkimda/"
 layout: about
 heading: "$ whoami"
 greeting: "**Merhaba, ben Meriç.** Küçük ekiplerin tekrar eden işlerini yapay zeka otomasyonuyla üzerlerinden alıyorum."
-# Sadece gerçekten kullanılan araçlar ("~/Desktop/Ajanlarım /context.md").
+# Sadece gerçekten kullanılan araçlar (repo dışındaki özel profil notlarına göre).
 stack:
   - group: "Kod ve otomasyon"
     items: ["Python", "n8n", "Claude Code"]

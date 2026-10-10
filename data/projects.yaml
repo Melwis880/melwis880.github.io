@@ -1,6 +1,6 @@
 # Projeler sayfası (/projects/, /tr/projeler/) bu listeden çizilir: layouts/_default/projects.html.
 # Yeni proje = bu listeye yeni bir kayıt; sıra sayfadaki sıradır (en yeni üstte).
-# Sadece "~/Desktop/Ajanlarım /context.md" içindeki "Public proof" listesinde olan projeler girer.
+# Sadece özel profil notlarındaki (repo dışında) "Public proof" listesinde olan projeler girer.
 # Sayılar vaka analizindekilerle birebir aynı olmalı; ölçülmeyen bir şeyi sayı gibi yazma.
 #
 # Alanlar:
