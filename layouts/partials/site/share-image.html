@@ -1,0 +1,30 @@
+{{- /*
+  Yazının paylaşım kartı (og:image): 1200x630 JPG, build sırasında çizilir.
+  Zemin assets/img/share/bg.png (koyu zemin, yeşil şerit, alt çizgi); metin assets/fonts/DejaVuSans-Bold.ttf
+  ile yazılır (font sadece build'de kullanılır, siteye yüklenmez). Üstte yazının türü, ortada başlık,
+  altta isim ve alan adı. Renkler koyu temanın token'ları (assets/css/main.css).
+  Girdi: yazı sayfası. Çıktı: işlenmiş görsel kaynağı; zemin ya da font yoksa false.
+  Kullanım: {{ with partial "site/share-image.html" . }}{{ .Permalink }}{{ end }}
+*/ -}}
+{{- $result := false -}}
+{{- $bg := resources.Get "img/share/bg.png" -}}
+{{- $font := resources.Get "fonts/DejaVuSans-Bold.ttf" -}}
+{{- if and $bg $font -}}
+  {{- $type := partial "site/post-type.html" . -}}
+  {{- /* Uzun başlıklar daha küçük yazılır ki en fazla 4 satırda alt çizginin üstünde kalsın. */ -}}
+  {{- $size := cond (gt (strings.RuneCount .Title) 70) 52 62 -}}
+  {{- $host := (urls.Parse site.BaseURL).Host -}}
+  {{- /* images.Text satırı görselin sağ kenarına ~20 px kala kırar. Başlık, zeminin soldan 1140 px'lik
+       kesitine yazılıp zeminin üstüne aynı yere bindirilir: satırlar alt çizginin bittiği yerde (1120 px)
+       kırılır, sağ boşluk sola yakın olur. Tür etiketi büyük harfe çevrilmez (Go'nun upper'ı Türkçe
+       i/İ'yi bilmez: "ANALIZI" yazardı). */ -}}
+  {{- $title := $bg.Crop "1140x630 TopLeft" | images.Filter
+    (images.Text .Title (dict "font" $font "color" "#f0f6fc" "size" $size "linespacing" 12 "x" 80 "y" 140)) -}}
+  {{- $filters := slice
+    (images.Overlay $title 0 0)
+    (images.Text (i18n (printf "type-%s" $type)) (dict "font" $font "color" "#7ee787" "size" 30 "x" 80 "y" 76))
+    (images.Text (printf "%s  ·  %s" site.Title $host) (dict "font" $font "color" "#8b949e" "size" 28 "x" 80 "y" 548))
+  -}}
+  {{- $result = ($bg | images.Filter $filters).Process "jpg q85" -}}
+{{- end -}}
+{{- return $result -}}

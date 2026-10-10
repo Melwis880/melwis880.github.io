@@ -101,6 +101,8 @@ other = "Saha notları"
 other = "Araştırma notları"
 [type-case-study-plural]
 other = "Vaka analizleri"
+[type-note-plural]
+other = "Notlar"
 
 # Yazı sayfası
 [minRead]

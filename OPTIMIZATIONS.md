@@ -11,8 +11,9 @@
 | O13 | **Uygulandı** | `layouts/home.rss.xml` (sadece yazılar), iki `/now/` sayfasına sabit `date: 2026-10-10`, `timeZone = "Europe/Istanbul"` (ayrı commit; çıktıda sadece saat dilimi ekleri `+00:00` → `+03:00` değişti, görünen 34 tarihin hepsi aynı) |
 | O14 | **Uygulandı** | `[languages.tr] disableKinds = ["404"]` |
 | O15 | **Uygulandı** | `_default/post.html` silindi, 6 i18n anahtarı x 2 dil çıkarıldı, 4 eski yorum düzeltildi, `.visually-hidden` silindi. CLAUDE.md güncellendi |
-| O16 | Bilerek açık | Sahibinin kararı: `notes` dalları kalıyor |
-| O7, O8, O9, O10, O11, O12 | Açık | Düşük öncelik |
+| O16 | **Kapandı** (3. aşama, 2026-10-11) | Notlar bölümü kuruldu; `notes` dalları artık kullanılıyor |
+| O10 | **Uygulandı** (3. aşama) | Yazı ve notlarda yazıya özel 1200x630 JPG paylaşım kartı (`partials/site/share-image.html`), diğer sayfalarda genel görselin 1200x630 JPG kesiti; `og:image:width/height/type` eklendi |
+| O7, O8, O9, O11, O12 | Açık | Düşük öncelik |
 
 **Doğrulama:** `hugo --gc --minify --cleanDestinationDir` uyarısız, 77 → **76 dosya**. Önceki çıktıyla karşılaştırma (CSS parmak izi ve SRI değeri eşitlenerek): gerçek fark sadece `404.html` (TR `hreflang` satırı gitti, dil düğmesi `/tr/404.html` yerine `/tr/`), `index.xml` ve `tr/index.xml` (5 → 2 öğe, başlık `M. Meriç Ordu`). `tr/404.html` artık yok. CSS'te tek fark `.visually-hidden`. Sitemap'ler değişmedi. İki akış geçerli XML. İç link kontrolü: 43 yerel yol, 0 eksik. `/now/` koruması: `lastmod` geçici olarak 2026-11-10 yapılınca sayfa ve alt bilgi linki yine üretildi (dosya sonra eski haline getirildi).
 
@@ -91,7 +92,7 @@ Site performans açısından iyi durumda. Bir yazı sayfasının ilk ziyareti to
 - **Removal Safety:** `post.html`: Safe (diff boş). i18n: Safe. Yorumlar: Safe.
 - **Reuse Scope:** module (layouts, i18n)
 
-### O16. (AÇIK, sahibinin kararıyla kalıyor) Var olmayan `notes/` bölümü için kod dalları
+### O16. (KAPANDI: notlar bölümü 3. aşamada kuruldu) Var olmayan `notes/` bölümü için kod dalları
 - **Category:** Maintainability / Over-Abstracted Code
 - **Severity:** Low
 - **Impact:** Okunabilirlik
@@ -145,7 +146,7 @@ Site performans açısından iyi durumda. Bir yazı sayfasının ilk ziyareti to
 - **Removal Safety:** Safe
 - **Reuse Scope:** local file
 
-### O10. (AÇIK) og:image 1920x1440 WebP
+### O10. (UYGULANDI, 3. aşama) og:image 1920x1440 WebP
 - **Category:** Reliability / Network
 - **Severity:** Low
 - **Impact:** LinkedIn/WhatsApp link önizlemesi

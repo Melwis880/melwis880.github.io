@@ -101,6 +101,8 @@ other = "Field notes"
 other = "Research notes"
 [type-case-study-plural]
 other = "Case studies"
+[type-note-plural]
+other = "Notes"
 
 # Yazı sayfası
 [minRead]

@@ -1,0 +1,16 @@
+{{- /* Notlar (/notes/, /tr/notes/): kısa "bugün öğrendim" yazıları. Kendi menü öğesi yok; Yazılar listesinde
+     görünür, bu sayfaya Yazılar'daki "Not" filtresinden gelinir. content/notes/_index.md gerekmiyor:
+     başlık i18n'den gelir. Sadece taslak notlar varken Hugo bu sayfayı yine de üretir: o durumda
+     "yakında" yazar, noindex alır (site/head.html) ve sitemap'e girmez (layouts/sitemap.xml). */ -}}
+{{ define "main" }}
+<div class="container">
+  <h1 class="page-title">{{ i18n "type-note-plural" }}</h1>
+  {{- with .Content }}<div class="page-lead">{{ . }}</div>{{ end }}
+  {{ partial "site/type-filter.html" (dict "page" . "current" "note") }}
+  {{- with .Pages }}
+  <ul class="post-list">{{ range . }}{{ partial "site/post-row.html" . }}{{ end }}</ul>
+  {{- else }}
+  <p class="page-lead">{{ i18n "moreSoon" }}</p>
+  {{- end }}
+</div>
+{{ end }}

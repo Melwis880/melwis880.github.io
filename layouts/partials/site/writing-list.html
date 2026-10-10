@@ -1,9 +1,11 @@
-{{- /* Yazılar sayfasının gövdesi (/post/, /tr/post/): tür filtreleri ve yıllara göre gruplanmış sade liste. */ -}}
+{{- /* Yazılar sayfasının gövdesi (/post/, /tr/post/): tür filtreleri ve yıllara göre gruplanmış sade liste.
+     Notlar (content/notes/) da bu listede; ana sayfa ve RSS ile aynı süzgeç. */ -}}
 <div class="container">
   <h1 class="page-title">{{ .Title }}</h1>
   {{- with .Content }}<div class="page-lead">{{ . }}</div>{{ end }}
   {{ partial "site/type-filter.html" (dict "page" . "current" "") }}
-  {{- range .Pages.GroupByDate "2006" }}
+  {{- $pages := where site.RegularPages "Section" "in" (slice "post" "notes") }}
+  {{- range $pages.GroupByDate "2006" }}
   <h2 class="year-heading">{{ .Key }}</h2>
   <ul class="post-list">{{ range .Pages }}{{ partial "site/post-row.html" . }}{{ end }}</ul>
   {{- end }}

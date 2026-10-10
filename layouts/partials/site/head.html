@@ -5,11 +5,15 @@
        çalışmadığı için yok. /kart/ sayfasının kendi, daha sıkı CSP'si var (static/kart/index.html). */}}
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ if .IsHome }}{{ site.Title }} | {{ site.Params.SEOTitle }}{{ else if eq .Kind "404" }}404 · {{ i18n "notFoundTitle" }} | {{ site.Title }}{{ else }}{{ .Title }} | {{ site.Title }}{{ end }}</title>
+  <title>{{ if .IsHome }}{{ site.Title }} | {{ site.Params.SEOTitle }}{{ else if eq .Kind "404" }}404 · {{ i18n "notFoundTitle" }} | {{ site.Title }}{{ else if and (eq .Kind "section") (eq .Section "notes") }}{{ i18n "type-note-plural" }} | {{ site.Title }}{{ else }}{{ .Title }} | {{ site.Title }}{{ end }}</title>
   {{- $description := .Description | default site.Params.description }}
   <meta name="description" content="{{ $description }}">
   <meta name="keywords" content="{{ site.Params.keyword }}">
   <meta name="theme-color" content="#0d1117">
+  {{- /* Sadece taslak notlar varken üretilen boş notlar sayfası aranmasın (layouts/notes/list.html). */}}
+  {{- if and (eq .Kind "section") (eq .Section "notes") (not .RegularPages) }}
+  <meta name="robots" content="noindex">
+  {{- end }}
 
   <link rel="canonical" href="{{ .Permalink }}">
   {{- /* İki dilli site: arama motorlarına sayfanın diğer dildeki karşılığını bildir. */}}
@@ -21,11 +25,26 @@
   {{- end }}
 
   {{- /* Paylaşım etiketleri: Hugo'nun OpenGraph şablonu + tek bir görsel. twitter:title vb.
-       yazılmıyor; X, eksik olanları og:* etiketlerinden alıyor. */}}
+       yazılmıyor; X, eksik olanları og:* etiketlerinden alıyor.
+       Görsel: ön bilgide image varsa o; yazı ve notlarda yazıya özel kart (partials/site/share-image.html);
+       diğer sayfalarda sitenin genel görseli. Kart ve genel görsel 1200x630 JPG: önizleme kartlarının
+       oranı (1.91:1) ve LinkedIn'in her yerde okuyabildiği biçim. */}}
   {{ template "_internal/opengraph.html" . }}
-  {{- $ogImage := partialCached "webp-image.html" site.Params.header_image site.Params.header_image }}
-  {{- with .Params.image }}{{ $ogImage = partial "webp-image.html" . }}{{ end }}
-  <meta property="og:image" content="{{ $ogImage }}">
+  {{- $og := false }}
+  {{- if .Params.image }}
+  <meta property="og:image" content="{{ partial "webp-image.html" .Params.image }}">
+  {{- else }}
+    {{- if and .IsPage (in (slice "post" "notes") .Section) }}
+      {{- $og = partial "site/share-image.html" . }}
+    {{- end }}
+    {{- if not $og }}{{ with resources.Get site.Params.header_image }}{{ $og = .Fill "1200x630 jpg Center q80" }}{{ end }}{{ end }}
+    {{- with $og }}
+  <meta property="og:image" content="{{ .Permalink }}">
+  <meta property="og:image:width" content="{{ .Width }}">
+  <meta property="og:image:height" content="{{ .Height }}">
+  <meta property="og:image:type" content="image/jpeg">
+    {{- end }}
+  {{- end }}
   <meta name="twitter:card" content="summary_large_image">
 
   <link rel="icon" href="{{ "img/favicon.ico" | relURL }}">

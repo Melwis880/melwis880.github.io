@@ -16,7 +16,10 @@
       {{- $current := .RelPermalink }}
       {{- range site.Menus.main }}
         {{- $url := .URL | relURL }}
-        <a class="nav-link" href="{{ $url }}"{{ if hasPrefix $current $url }} aria-current="page"{{ end }}>{{ .Name }}</a>
+        {{- /* Notlar Yazılar'ın parçası: /notes/ altındayken Yazılar menüsü vurgulanır. */}}
+        {{- $active := hasPrefix $current $url }}
+        {{- if and (eq $.Section "notes") (hasSuffix $url "/post/") }}{{ $active = true }}{{ end }}
+        <a class="nav-link" href="{{ $url }}"{{ if $active }} aria-current="page"{{ end }}>{{ .Name }}</a>
       {{- end }}
       {{- /* JS varsa menüyü arama kutusuna çevirir (assets/js/search.js); yoksa arama sayfasına gider. */}}
       <a class="icon-btn search-toggle" href="{{ "search/" | relLangURL }}" aria-label="{{ i18n "search" }}" title="{{ i18n "searchHint" }}" aria-keyshortcuts="/">{{ partial "site/icon.html" "search" }}</a>
