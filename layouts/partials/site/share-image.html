@@ -22,8 +22,8 @@
     (images.Text .Title (dict "font" $font "color" "#f0f6fc" "size" $size "linespacing" 12 "x" 80 "y" 140)) -}}
   {{- $filters := slice
     (images.Overlay $title 0 0)
-    (images.Text (i18n (printf "type-%s" $type)) (dict "font" $font "color" "#7ee787" "size" 30 "x" 80 "y" 76))
-    (images.Text (printf "%s  ·  %s" site.Title $host) (dict "font" $font "color" "#8b949e" "size" 28 "x" 80 "y" 548))
+    (images.Text (i18n (printf "type-%s" $type)) (dict "font" $font "color" "#7ee787" "size" 40 "x" 80 "y" 66))
+    (images.Text (printf "%s  ·  %s" site.Title $host) (dict "font" $font "color" "#8b949e" "size" 36 "x" 80 "y" 542))
   -}}
   {{- $result = ($bg | images.Filter $filters).Process "jpg q85" -}}
 {{- end -}}

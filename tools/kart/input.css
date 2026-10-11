@@ -1,0 +1,24 @@
+/* /kart/ stilleri: Tailwind + sayfaya özel dört kural. Çıktı: static/kart/kart.css (tools/kart/README.md). */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .custom-divider {
+    background: linear-gradient(180deg, #758a60, #445439 55%, #2e3d28);
+    border-radius: 9999px;
+  }
+  body {
+    background: linear-gradient(160deg, #eef2e6, #dfe6d2 45%, #d7e0c9);
+  }
+  .avatar-photo {
+    background-image: url(business_foto1.jpg);
+    background-position: center 22%;
+    background-repeat: no-repeat;
+    background-size: 145%;
+    filter: grayscale(40%);
+  }
+  .card-shadow {
+    box-shadow: 0 10px 30px -12px rgba(40, 55, 35, .25);
+  }
+}
