@@ -1,169 +1,159 @@
 # OPTIMIZATIONS.md
 
-> Kapsam: `phase-2` dalı (a105172). Temasız iki dilli Hugo sitesi (EN `/`, TR `/tr/`), 2. aşamada eklenen Projeler / Hakkımda / Şu an / 404 sayfaları, `/kart/`, Pagefind araması, GitHub Actions deploy hattı.
-> Yöntem: `hugo --gc --minify --cleanDestinationDir --templateMetrics --templateMetricsHints` ile gerçek build; `public/` dosya listesi ve gzip boyutları; `main.css` sınıflarının şablon/JS/içerik/çıktıda kullanılıp kullanılmadığı tarandı; i18n anahtarları şablonlarla karşılaştırıldı. Önerilen her config/şablon değişikliği `~/snap/hugo/common/opt-test/` altındaki atılabilir bir kopyada denendi ve çıktı `diff -r` ile karşılaştırıldı. Rakamlar aksi belirtilmedikçe ölçülmüştür.
-> Tarih: 2026-10-10. Aynı gün c0f1e7f üzerinde yapılan denetimin yerini alır; o denetimin bulguları (O1-O12) aynı numaralarla en altta, yeni bulgular O13'ten başlıyor. Test kopyası (`opt-test`) işi bitince silindi.
-
-## Durum (2026-10-10, uygulama oturumu)
-
-| Bulgu | Durum | Not |
-|---|---|---|
-| O13 | **Uygulandı** | `layouts/home.rss.xml` (sadece yazılar), iki `/now/` sayfasına sabit `date: 2026-10-10`, `timeZone = "Europe/Istanbul"` (ayrı commit; çıktıda sadece saat dilimi ekleri `+00:00` → `+03:00` değişti, görünen 34 tarihin hepsi aynı) |
-| O14 | **Uygulandı** | `[languages.tr] disableKinds = ["404"]` |
-| O15 | **Uygulandı** | `_default/post.html` silindi, 6 i18n anahtarı x 2 dil çıkarıldı, 4 eski yorum düzeltildi, `.visually-hidden` silindi. CLAUDE.md güncellendi |
-| O16 | **Kapandı** (3. aşama, 2026-10-11) | Notlar bölümü kuruldu; `notes` dalları artık kullanılıyor |
-| O10 | **Uygulandı** (3. aşama) | Yazı ve notlarda yazıya özel 1200x630 JPG paylaşım kartı (`partials/site/share-image.html`), diğer sayfalarda genel görselin 1200x630 JPG kesiti; `og:image:width/height/type` eklendi |
-| O7, O8, O9, O11, O12 | Açık | Düşük öncelik |
-
-**Doğrulama:** `hugo --gc --minify --cleanDestinationDir` uyarısız, 77 → **76 dosya**. Önceki çıktıyla karşılaştırma (CSS parmak izi ve SRI değeri eşitlenerek): gerçek fark sadece `404.html` (TR `hreflang` satırı gitti, dil düğmesi `/tr/404.html` yerine `/tr/`), `index.xml` ve `tr/index.xml` (5 → 2 öğe, başlık `M. Meriç Ordu`). `tr/404.html` artık yok. CSS'te tek fark `.visually-hidden`. Sitemap'ler değişmedi. İki akış geçerli XML. İç link kontrolü: 43 yerel yol, 0 eksik. `/now/` koruması: `lastmod` geçici olarak 2026-11-10 yapılınca sayfa ve alt bilgi linki yine üretildi (dosya sonra eski haline getirildi).
+> Kapsam: `small-fixes` dalı (75dca59). 3. aşamadan sonraki durum: notlar bölümü, yazıya özel paylaşım kartları, archetype'lar, `tools/kart/` Tailwind kaynakları. Önceki denetim (2026-10-10, a105172) O1-O16'yı kapsıyordu; açık kalanlar burada yeniden ölçüldü, yeni bulgular O17'den başlıyor.
+> Yöntem: `hugo --gc --minify --cleanDestinationDir --templateMetrics --templateMetricsHints` ile gerçek build; `public/` dosya listesi ve gzip boyutları; `main.css`'teki 125 sınıfın şablon/JS/içerik/çıktıda kullanımı; i18n anahtarları ve simge adlarının çağrıları; JS dosyaları satır satır okundu. Önerilen her şablon/config değişikliği `~/snap/hugo/common/opt-test/` altındaki atılabilir bir kopyada denendi ve çıktı `diff -rq` ile karşılaştırıldı (gerekince kopyaya geçici yazılar eklenip yine diff alındı). Süreler 7-9 çalıştırmanın medyanı. Rakamlar aksi yazılmadıkça ölçülmüştür.
+> Tarih: 2026-10-11. **Hiçbir proje dosyası değiştirilmedi** (bu dosya dışında). Test kopyası `~/snap/hugo/common/opt-test/` hâlâ duruyor; silinmesi onay bekliyor.
 
 ---
 
 ## 1) Optimization Summary
 
-Site performans açısından iyi durumda. Bir yazı sayfasının ilk ziyareti toplam **~21 KB gzip**: HTML 5.3 KB, CSS 6.0 KB, JS 2.5 KB, tema-init 0.2 KB, avatar 1.9 KB, favicon 5.2 KB. Çıktı **77 dosya / 677,148 byte**, build **162 ms**, uyarı yok. Temanın ölü dosyaları gitti, `main.css`'te kullanılmayan tek sınıf var. Kalan sorunlar hız değil **doğruluk ve hijyen** sorunları: RSS akışı, 404 sayfaları ve küçük miktarda ölü kod.
+Site hız açısından iyi durumda ve bir önceki denetimden beri kötüleşmedi. Bir yazı sayfasının ilk ziyareti toplam **~21 KB gzip**: HTML 5.6 KB, CSS 5.9 KB, JS 2.5 KB, tema-init 0.2 KB, avatar 1.9 KB, favicon 5.2 KB. Çıktı **80 dosya / 893,332 byte** (artışın neredeyse tamamı 4 paylaşım kartı JPG'si, ~55 KB/adet; bunları sadece link önizleme botları indirir). Build ılık önbellekle **~115 ms**, soğuk (CI'daki durum) **1.2 sn**, uyarı yok. `main.css`'te kullanılmayan sınıf yok (bilerek tutulan 3 sınıf hariç), bütün i18n anahtarları kullanılıyor.
+
+Kalan sorunlar hız değil **doğruluk ve bakım** sorunları.
 
 **En yüksek etkili 3 iyileştirme:**
-1. **O13: Ana RSS akışında Hakkımda, Projeler ve Şu an da var.** Bu sayfalar abonelere "yazı" olarak görünüyor. About ve Projects'in `pubDate` alanı `Mon, 01 Jan 0001`. Şu an sayfasının yayın tarihi `lastmod`'dan geliyor: her aylık güncellemede akışta yeniden "yeni yazı" olarak çıkıyor. `lastmod` CI saatine (UTC) göre gelecekteyse sayfa build'den tamamen düşüyor.
-2. **O14: `/tr/404.html` hiç 404 olarak sunulmuyor** (GitHub Pages sadece kökteki `/404.html`'i kullanır). Ama kök 404 sayfasındaki dil düğmesi ve `hreflang` etiketi oraya gidiyor. Ziyaretçi ve tarayıcı, 200 koduyla dönen bir "bulunamadı" sayfasına yönleniyor. Çözüm tek satır config.
-3. **O15: Kanıtlanmış ölü kod.** `_default/post.html` silindiğinde çıktı byte byte aynı kalıyor. Ayrıca iki dilde 6 kullanılmayan i18n anahtarı ve 5 şablonda artık doğru olmayan "tema" yorumları var.
+1. **O17: `/search/` sayfasında yarış durumu.** Hızlı yazarken eski sorgunun sonuçları yeni sorgunun listesine ekleniyor ve yeni sorgunun ilk 10 sonucu atlanıyor. "Daha fazla" düğmesine çift tıklamak sonuçları iki kez basıyor. Bir sayaçla kapanıyor (O11'in titreme düzeltmesiyle aynı yamada).
+2. **O20: İletişim bilgisi 3 dosyada 7 kez elle yazılı.** `hugo.toml`, `static/kart/index.html` (4 kez) ve `static/kart/kart.js` (2 kez). CLAUDE.md'nin en sıkı kuralı "sitede tek e-posta" ve bu kural bugün sadece dikkatle korunuyor. Build sırasında çalışan tek satırlık bir kontrol, adres değişince `/kart/`'ın geride kalmasını uyarıya çevirir.
+3. **O18 + O19: 3. aşamadan kalan tekrar ve eski bağlam.** Yazı bölümleri listesi (`post`, `notes`) 5 şablonda ayrı ayrı yazılı. 4 yorum artık var olmayan ya da taşınmış dosyaları gösteriyor; bunlardan biri `hugo.toml`'daki `unsafe = false` güvenlik notu (markdownify kullanan şablonların listesi eksik ve yanlış). Hepsi diff ile doğrulandı: çıktı birebir aynı kalıyor.
 
-**Hiçbir şey değişmezse en büyük risk:** `/now/` sayfası gece 00:00-03:00 (TR saati) arasında güncellenip push edilirse, CI tarihi gelecekte görür ve sayfa sitede 404 olur, alt bilgideki link de kaybolur. Sonraki deploy'a kadar böyle kalır. İkincisi, RSS abonelerinin her ay "Now" sayfasını yeni yazı olarak görmesi.
+**Hiçbir şey değişmezse en büyük risk:** İletişim e-postası ya da LinkedIn adresi değişirse ana site güncellenir, `/kart/` (QR kodla dağıtılan, telefonda açılan sayfa) eski adresi göstermeye ve vCard'a eski adresi yazmaya devam eder, build bunu fark etmez.
 
 ---
 
 ## 2) Findings (Prioritized)
 
-### O13. (UYGULANDI) Ana RSS akışı yazı olmayan sayfaları içeriyor; /now/ tarihi `lastmod`'a bağlı
-- **Category:** Reliability
+### O17. (YENİ) `/search/` sayfası: "Daha fazla" ile yeni sorgu arasında yarış durumu
+- **Category:** Reliability / Frontend
 - **Severity:** Medium
-- **Impact:** RSS abonelerinin gördüğü içerik, `/now/` sayfasının yayında kalması
-- **Evidence:**
-  - `public/index.xml` (her sayfada `<link rel=alternate>` ve alt bilgideki RSS ikonu buraya gider) 5 öğe içeriyor:
+- **Impact:** Arama sayfasında doğru sonuç listesi
+- **Evidence:** `assets/js/search.js:195-224`. `showMore()` önce `await Promise.all(batch.map(r => r.data()))` ile parça dosyalarını indiriyor, **sonra** `pList.appendChild(...)` ve `shown += batch.length` yapıyor. Bu arada hangi sorgu için çalıştığını kontrol etmiyor. Sıra:
+  1. "n8n" yazıldı → `pageUpdate` A → sonuç geldi → `showMore` A parçaları indiriyor (ağa bağlı, yavaş bağlantıda yüzlerce ms).
+  2. Kullanıcı yazmaya devam etti → `pageUpdate` B listeyi boşalttı, `shown = 0`.
+  3. `showMore` A bitti → A'nın 10 sonucunu B'nin boş listesine **ekledi**, `shown = 10` yaptı.
+  4. B'nin sonucu geldi → `showMore` B `current.slice(10, 20)` aldı: **B'nin ilk 10 sonucu hiç gösterilmedi**. B'nin 10'dan az sonucu varsa durum satırı "N sonuç" der ama listede sadece A'nın sonuçları durur.
 
-    | Öğe | pubDate |
-    |---|---|
-    | Now | Sat, 10 Oct 2026 (= `lastmod`) |
-    | Turning 2,047 n8n workflows... | Fri, 09 Oct 2026 |
-    | flx: a clean job feed... | Thu, 08 Oct 2026 |
-    | About | **Mon, 01 Jan 0001** |
-    | Projects | **Mon, 01 Jan 0001** |
+  Ayrıca "Daha fazla" düğmesine ikinci tıklama ilki bitmeden gelirse ikisi de aynı `shown` değerinden dilim alıyor: aynı 10 sonuç iki kez basılıyor.
+- **Why it's inefficient:** Yanlış sonuç gösteren bir arama, hiç sonuç göstermemekten kötü. Üstteki açılır panel (`update()`, satır 135-137) aynı kontrolü iki kez yapıyor (`input.value.trim() !== q`), sayfa tarafında `showMore` bu kontrolü atlıyor.
+- **Recommended fix:** Bir "nesil" sayacı: her `pageUpdate` sayacı artırır, `showMore` başladığı nesli hatırlar ve `await`'ten sonra nesil değiştiyse hiçbir şey yazmadan çıkar. Aynı anda tek `showMore` çalışsın diye düğme beklerken `disabled`. O11'in düzeltmesiyle (temizlemeyi sonuç gelene kadar ertelemek) aynı yamada (Bölüm 6).
+- **Tradeoffs / Risks:** Yok. Davranış sadece yarış anında değişiyor.
+- **Expected impact estimate:** Bir sınıf "yanlış/eksik sonuç" hatası kapanır. Ölçülebilir hız etkisi yok.
+- **Removal Safety:** Safe
+- **Reuse Scope:** local file (`assets/js/search.js`)
 
-    `public/tr/index.xml` da aynı durumda. Hugo'nun gömülü `rss.xml`'i ana sayfada `site.RegularPages`'in tamamını kullanıyor. `layouts/index.html` ise listeyi `Section in (post, notes)` ile süzüyor, yani akış sitenin kendisiyle tutarsız. Akışın başlığı da `Home on M. Meriç Ordu` (içerikteki "Home" başlığından geliyor).
-  - `content/now/index*.md`'de `date` yok, sadece `lastmod` var. Hugo'nun varsayılan `frontmatter.date` sırası `date → publishDate → lastmod` olduğu için sayfanın yayın tarihi `lastmod`.
-  - Deneme: atılabilir kopyada `lastmod: 2026-11-10` yapınca `out/now/` **hiç üretilmedi**, alt bilgideki /now linki de kayboldu (`buildFuture` kapalı). Front matter'daki `2026-11-10`, `2026-11-10T00:00:00Z` olarak okunur. Türkiye'de 10 Kasım 01:00'de yapılan bir push, CI'da hâlâ 9 Kasım 22:00 UTC'dir.
-- **Why it's inefficient:** Feed okuyucuları sayfaları `guid`/`pubDate` ile izler. Statik sayfalar akışta kalıcı gürültü yaratıyor, `/now/` ise her güncellemede tepeye çıkıyor. Bir danışmanlık portföyünde RSS'i takip eden okur azdır ama takip eden okur en ilgili okurdur. Yayın tarihinin `lastmod`'a bağlı olması da ilgisiz bir alanın sayfanın yayında kalıp kalmayacağını belirlemesi demek.
-- **Recommended fix:**
-  1. Sadece yazıları listeleyen site seviyesinde bir ana sayfa RSS şablonu: `layouts/home.rss.xml`. Gömülü şablonun kopyası, tek fark `$pages` satırı (Bölüm 6). Denendi: iki akışta da sadece 2 yazı kaldı, sıra ve içerik aynı, build uyarısız, başka hiçbir dosya değişmedi. Akış başlığı `M. Meriç Ordu` olur.
-  2. `content/now/index.md` ve `index.tr.md`'ye sabit bir `date: 2026-10-10` ekle. `lastmod` sadece "Güncellendi" satırını belirler; yayın tarihi artık değişmez. İsteğe bağlı: `hugo.toml`'a `timeZone = "Europe/Istanbul"`. Bu, saat yazılmamış bütün tarihleri (yazıların `date`'i dahil) TR saatiyle okutur ve aynı gece yarısı sorununu yazılar için de kapatır.
-- **Tradeoffs / Risks:** Şablon, Hugo'nun gömülü RSS'inin bir kopyası. Hugo onu değiştirirse kopya güncellenmez (bu boyutta önemsiz). **Denenip reddedilen yol:** sayfalara `build: {list: local}` eklemek akışı temizliyor ama Hakkımda/Projeler/Şu an'ı **sitemap'ten de çıkarıyor** (denendi), bu yüzden önerilmiyor.
-- **Expected impact estimate:** Akışta 5 → 2 öğe (yazı sayısı kadar). Bir sınıf "sayfa sessizce kayboldu" hatası kapanır. Hız etkisi yok.
-- **Removal Safety:** Safe (çıktı farkı sadece iki `index.xml`)
-- **Reuse Scope:** site-wide (layouts + 2 içerik dosyası)
+### O20. (YENİ) İletişim bilgisi `/kart/`'ta elle tekrar ediliyor; build kontrol etmiyor
+- **Category:** Reliability / Reuse Opportunity
+- **Severity:** Medium-Low
+- **Impact:** Kişisel veri kuralının (CLAUDE.md: tek e-posta) korunması, drift riski
+- **Evidence:** Aynı e-posta ve LinkedIn adresi:
+  - `hugo.toml:23,25` (`params.social`, ana sitenin tek kaynağı)
+  - `static/kart/index.html:84,92,107,115` (görünen metin + `mailto:` + link)
+  - `static/kart/kart.js:9,11` (vCard)
 
-### O14. (UYGULANDI) `/tr/404.html` ölü çıktı ve kök 404'ün dil düğmesi onu gösteriyor
-- **Category:** Reliability / Dead Code
-- **Severity:** Low-Medium
-- **Impact:** 404'e düşen ziyaretçinin yönlendirildiği yer, arama motoru sinyali, 1 ölü dosya (9 KB)
-- **Evidence:** Build iki 404 üretiyor: `public/404.html` ve `public/tr/404.html`. CLAUDE.md'nin de belirttiği gibi GitHub Pages her eksik adres için sadece kökteki dosyayı sunar. Bu yüzden `/tr/404.html` hiçbir zaman 404 olarak gösterilmez, sadece doğrudan adresiyle ve **200** koduyla açılır. Kök `404.html`'de:
-  ```html
-  <link rel=alternate hreflang=tr href=https://melwis880.github.io/tr/404.html>
-  <a class=icon-btn href=/tr/404.html hreflang=tr ...>   <!-- "Bu sayfayı Türkçe oku" -->
-  ```
-  Yani 404 sayfasında TR düğmesine basan kişi bir "bulunamadı" sayfasına daha gidiyor. Arama motoru da 200 dönen bir "soft 404" adresi görüyor.
-- **Recommended fix:** `hugo.toml`'da `[languages.tr]` altına `disableKinds = ["404"]`. Denendi: tek farklar `tr/404.html`'in kaybolması ve kök 404'te `hreflang` satırının gitmesi. Dil düğmesi, header'daki "çeviri yoksa o dilin ana sayfası" kuralıyla artık `/tr/`'ye gidiyor. Alttaki Türkçe "aradığın sayfa yok" satırı (`notFoundOther*`) aynen duruyor.
-- **Tradeoffs / Risks:** Yok. Türkçe 404 metni zaten kök sayfada var. `layouts/404.html`'deki yorum ve CLAUDE.md'deki 404 cümlesi aynı kalabilir.
-- **Expected impact estimate:** −1 dosya, doğru dil düğmesi, soft-404 adresi gider.
-- **Removal Safety:** Safe (diff ile doğrulandı)
-- **Reuse Scope:** config
+  `/kart/` Hugo'dan geçmeyen statik bir sayfa olduğu için `params.social`'ı okuyamıyor. LinkedIn adresi zaten iki biçimde yazılı (`hugo.toml`'da sonda `/` yok, `/kart/`'ta var; ikisi de çalışıyor).
+- **Why it's inefficient:** Adres değişikliği 3 dosyada 7 düzenleme demek, birini unutmak build'i bozmaz. `/kart/` QR kodla telefonda açılan sayfa: eskimiş bir adres en çok orada zarar verir.
+- **Recommended fix:** Sayfayı Hugo şablonuna çevirmek yerine (kendi CSP'si ve Tailwind'i olan bağımsız bir sayfa; taşımak büyük iş) **build sırasında bir kontrol**: `layouts/sitemap.xml`'in başına (dil başına bir kez çalışan bir şablon) `readFile` ile iki statik dosyayı okuyup `params.social.email` ve `linkedin` adreslerini içermiyorlarsa `warnf`. CLAUDE.md'nin "build uyarısız olmalı" kuralı bunu yakalar (Bölüm 6). Adres eski haliyle kalan dosyayı bulmaz ama "yeni adres burada yok" der; ikisi pratikte aynı şey.
+- **Tradeoffs / Risks:** `sitemap.xml` bu iş için ilgisiz bir yer; alternatif `layouts/404.html` (tek kez render edilir, TR'de kapalı). Yorumla neden orada olduğu yazılmalı.
+- **Expected impact estimate:** Sessiz drift → build uyarısı. Hız etkisi yok.
+- **Removal Safety:** Safe (denendi: diff boş, adres değişince uyarı geliyor)
+- **Reuse Scope:** site-wide (layouts + static/kart)
 
-### O15. (UYGULANDI) Kanıtlanmış ölü kod: `_default/post.html`, 6 i18n anahtarı, eski "tema" yorumları, 1 CSS sınıfı
+### O18. (YENİ) Yazı bölümleri listesi 5 yerde tekrar ediyor
+- **Category:** Maintainability / Reuse Opportunity
+- **Severity:** Low
+- **Impact:** Drift riski (yeni bir bölüm eklenince ana sayfa, Yazılar listesi, RSS ve paylaşım kartı ayrı ayrı güncellenmeli)
+- **Evidence:** `slice "post" "notes"`:
+  - `layouts/index.html:23`
+  - `layouts/home.rss.xml:3`
+  - `layouts/partials/site/writing-list.html:7`
+  - `layouts/partials/site/head.html:37` (paylaşım kartı kimin için çizilir)
+
+  ve yorumlarda "ana sayfa ve RSS ile aynı süzgeç" diye elle senkron tutulduğu yazılı. Hugo'nun bunun için yerleşik bir ayarı var: `params.mainSections` → `site.MainSections`.
+- **Recommended fix:** `hugo.toml`'da `[params] mainSections = ["post", "notes"]`, dört şablonda `site.MainSections`. **Denendi:** çıktı birebir aynı, build uyarısız. Yorumlardaki "aynı süzgeç" notları `hugo.toml`'u gösterecek şekilde kısalır.
+- **Tradeoffs / Risks:** `mainSections` verilmezse Hugo onu en kalabalık bölümden tahmin eder; açıkça yazmak bunu da önler.
+- **Expected impact estimate:** 4 elle senkron liste → 1 ayar. Hız etkisi yok.
+- **Removal Safety:** Safe (diff boş)
+- **Reuse Scope:** site-wide (config + 4 şablon)
+
+### O19. (YENİ) 3. aşamadan kalan eski yorumlar, kullanılmayan parçalar
 - **Category:** Maintainability / Dead Code
-- **Severity:** Low
-- **Impact:** Okunabilirlik, yanlış bağlam (insan ya da ajan için)
+- **Severity:** Low (ilk madde güvenlik notu olduğu için Low-Medium)
+- **Impact:** Doğru bağlam (insan ya da ajan için), daha az kod
 - **Evidence:**
-  - `layouts/_default/post.html`: atılabilir kopyada silindi, `diff -rq` **çıktı birebir aynı**. Temanın aynı adlı dosyası gittiği için `/post/` listesi artık `post/list.html`'den geliyor. CLAUDE.md bu kontrolü zaten istiyordu.
-  - `i18n/en.toml` ve `i18n/tr.toml`: `postedBy`, `on`, `lastModified`, `newerPosts`, `olderPosts`, `featuredTags`. `layouts/` içinde hiçbir çağrısı yok, tema döneminden kalma. `printf "type-%s"`, `project-%s`, `aiNote-%s`, `callout-%s` ile dinamik çağrılanlar ayrı kontrol edildi, onlar kullanılıyor.
-  - Artık doğru olmayan yorumlar: `_default/baseof.html:2-3` ("CleanWhite temasının baseof'u yerine geçer; tema klasörü şimdilik yerinde duruyor"), `taxonomy/category.html:1`, `taxonomy/tag.html:1`, `taxonomy/terms.html:1` ("Tema dosyasının yerine geçer").
-  - `assets/css/main.css`: `.visually-hidden` hiçbir şablonda, JS'te ya da içerikte kullanılmıyor. (`.footnotes`/`.footnote-backref` Goldmark'ın dipnot çıktısı, `.g4` 4. rozet grubunun rengi: bunlar ileride kullanılabilir, kalsın.)
-- **Recommended fix:** `_default/post.html`'i sil (**açık "evet" ile**) ve CLAUDE.md'deki "may be removable" cümlesini güncelle. 6 anahtarı iki i18n dosyasından çıkar. 4 yorumu düzelt. `.visually-hidden`'ı ya sil ya da ilk erişilebilirlik ihtiyacında kullanmak üzere bırak (tek kural, küçük).
-- **Tradeoffs / Risks:** Yok.
-- **Expected impact estimate:** ~20 satır ve 1 dosya eksilir. Hız etkisi yok.
-- **Removal Safety:** `post.html`: Safe (diff boş). i18n: Safe. Yorumlar: Safe.
-- **Reuse Scope:** module (layouts, i18n)
+  1. **`hugo.toml:99-102`**, `unsafe = false`'ın neden kapalı kalması gerektiğini anlatan not: markdownify kullanan yerler olarak `layouts/index.html` ve `layouts/post/single.html (updates[].note | markdownify)` sayıyor. `updates` artık `partials/site/article.html:61`'de. Listede olmayanlar: `_default/about.html:23` (`greeting | markdownify`), `_default/projects.html:23,30` (`RenderString`, `data/projects.yaml`'dan), `shortcodes/callout.html:11`. Notun amacı "unsafe açılırsa neler etkilenir" sorusunu cevaplamak; eksik liste bu amaca hizmet etmiyor.
+  2. `layouts/post/list.html:1`: "(bkz. `_default/post.html` notu)". Dosya O15'te silindi.
+  3. `layouts/_default/section.html:1`: "(ör. ileride notes/)". Notların artık kendi `notes/list.html`'i var.
+  4. `layouts/partials/site/type-filter.html`: üç çağıran da `(dict "page" . "current" ...)` geçiyor, şablon `.page`'i hiç okumuyor. Girdi sadece `current` olabilir.
+  5. `layouts/partials/site/icon.html`: `arrow-right` ve `arrow-left` simgelerini hiçbir şablon çağırmıyor (oklar metin olarak `→`/`←` yazılıyor). `(dict "name" ... "class" ...)` biçimi (satır 8-9) de hiçbir yerde kullanılmıyor; 21 çağrının hepsi düz isim geçiyor.
+  6. `.github/workflows/hugo.yaml:48`: `HUGO_ENV: production`. Hugo'nun eski adı; `HUGO_ENVIRONMENT` yanında gereksiz.
+  7. `layouts/index.html:24-25`: başlangıç listesinde olmayan yazıları bulan elle döngü, `complement $start $posts` ile tek ifade. **Denendi:** çıktı birebir aynı, sıra korunuyor (kopyaya 3 geçici yazı eklenip doğrulandı).
+- **Recommended fix:** 1-3: yorumları düzelt (Bölüm 6). 4: `type-filter.html` girdisini düz string yap ya da `page`'i bırakıp yorumda "ileride" diye belirt (ilki daha temiz). 5: iki simgeyi ve map dalını sil; ileride gerekirse git geçmişinde. 6: satırı sil. 7: `complement`.
+- **Tradeoffs / Risks:** Yok. 5'teki map dalı "ileride büyük simge" için düşünülmüş olabilir; sahibine sor.
+- **Expected impact estimate:** ~15 satır eksilir, güvenlik notu doğru olur. Hız etkisi yok.
+- **Removal Safety:** 1-3, 6, 7: Safe. 4: Safe (diff ile doğrulanmalı). 5: Likely Safe (çağıran yok; sahibine sor)
+- **Reuse Scope:** module (layouts, config, CI)
 
-### O16. (KAPANDI: notlar bölümü 3. aşamada kuruldu) Var olmayan `notes/` bölümü için kod dalları
-- **Category:** Maintainability / Over-Abstracted Code
+### O21. (YENİ) vCard: blob adresi tıklamadan hemen sonra iptal ediliyor
+- **Category:** Reliability
 - **Severity:** Low
-- **Impact:** Okunabilirlik
-- **Evidence:** `content/notes/` yok. Buna rağmen: `layouts/index.html:23` (`slice "post" "notes"`), `layouts/partials/site/post-type.html:7-8` (`notes` → `"note"`), `icon.html`'de `"note"` simgesi, i18n'de `type-note`. CLAUDE.md'ye göre yazı türleri üç kategori (`case-study`, `field-note`, `research`). "Kısa not" ihtiyacı `field-note` kategorisiyle karşılanıyor, ayrı bölüm planı yazılı değil.
-- **Why it's inefficient:** Hiç çalışmayan bir dal, okuyana iki ayrı yazı sistemi varmış izlenimi veriyor.
-- **Recommended fix:** `notes/` bölümü planlanmıyorsa bu dört parçayı kaldır. Planlanıyorsa olduğu gibi bırak. **Sahibinin kararı.**
-- **Not:** `_default/section.html` ve `_default/single.html` de bugün hiçbir sayfa için render edilmiyor (`--templateMetrics` listesinde yoklar). Ama ikisi bilinçli yedek şablon: silinirlerse yeni bir bölüm ya da sayfa türü `WARN found no layout file` verir. **Kalmalılar.**
-- **Removal Safety:** Needs Verification (sahibine sor)
-- **Reuse Scope:** module (layouts, i18n)
+- **Impact:** `/kart/`'taki "Rehbere ekle" düğmesinin telefonda çalışması
+- **Evidence:** `static/kart/kart.js:22-24`: `link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);` hepsi aynı anda. `click()` indirmeyi başlatır ama dosyanın okunmasını beklemez. Masaüstü Chrome/Firefox'ta sorun yok; iOS Safari'de `.vcf`'yi açma işi asenkron ve adres o sırada iptal edilmiş olabiliyor (bilinen bir sorun sınıfı, bu sayfada **ölçülmedi**).
+- **Recommended fix:** `setTimeout(function () { URL.revokeObjectURL(url); }, 1000);`. Gerçek bir iPhone'da önce/sonra dene.
+- **Tradeoffs / Risks:** Blob 1 saniye daha bellekte kalır (~300 byte).
+- **Expected impact estimate:** Olası bir "düğme bir şey yapmıyor" hatası kapanır. Kartın ana işlevi bu düğme.
+- **Removal Safety:** Needs Verification (iOS Safari'de test)
+- **Reuse Scope:** local file
 
-### O9. (GÜNCELLENDİ) Footer her sayfada yeniden render ediliyor
-- **Category:** Build / Caching
+### O22. (YENİ) TODO koruması meşru "TODO:" metnini de yakalıyor
+- **Category:** Reliability / Build
 - **Severity:** Low
-- **Impact:** Build süresi
-- **Evidence:** `--templateMetricsHints`: `site/footer.html` 36 çağrı, **cache potential %98**. `site/header.html` %69 (sayfaya bağlı: `aria-current`, çeviri linki). `site/icon.html` 418 çağrı.
-- **Recommended fix:** `baseof.html`'de `{{ partialCached "site/footer.html" . site.Language.Lang }}`. Footer'daki her şey dile bağlı (`site.GetPage "/now"`, `i18n`, `now.Year` build başına sabit). **Denendi:** çıktı birebir aynı. Build 5 çalıştırmada medyan **118 → 102 ms**.
-- **Tradeoffs / Risks:** Footer'a ileride sayfaya özel bir şey eklenirse cache anahtarı yanlış olur. Partial'ın başına bir satırlık not düş.
-- **Expected impact estimate:** ~%13 daha hızlı build. Mutlak değer önemsiz. **Hijyen, zorunlu değil.**
+- **Impact:** Yanlış build uyarısı
+- **Evidence:** `partials/site/article.html:12`: `strings.Contains .RawContent "TODO:"`. Bir yazıda kod bloğunda ya da metin içinde "TODO:" geçerse (ör. kod yorumu, "TODO: listesi" anlatan bir not) build uyarı verir. Uyarısız build kuralı yüzünden yazar ya metni değiştirir ya da uyarıyı görmezden gelmeyi öğrenir; ikincisi korumayı işe yaramaz yapar.
+- **Recommended fix:** Archetype'taki bütün `TODO:` satırları satır başında başlıyor (`archetypes/post.md:16,20,26,30...`). Kontrolü buna daralt: `findRE `(?m)^TODO:` .RawContent 1`. Kod blokları içinde satır başında "TODO:" yine yakalanır ama bu çok daha nadir.
+- **Tradeoffs / Risks:** Archetype'a ileride satır ortasında bir "TODO:" eklenirse yakalanmaz. Archetype'ın başına bir satırlık not yeter.
 - **Removal Safety:** Safe
-- **Reuse Scope:** local (`baseof.html`)
-
-### O7. (AÇIK) Avatar dönüşümü üç yerde, önceki/sonraki yazı döngüsü O(n²)
-- **Category:** Maintainability / Reuse Opportunity / Algorithm
-- **Severity:** Low
-- **Impact:** Drift riski; çok sayıda yazıda build süresi
-- **Evidence:**
-  - `resources.Get site.Params.avatar` + `.Fill` üç şablonda: `partials/site/header.html:5-8` ve `post/single.html:60-62` (ikisi de `"96x96 webp Center q85"`, 48x48 gösterim), `_default/about.html:19-22` (`"240x240 webp Center q85"`). İlk ikisinin ayarı elle senkron tutuluyor.
-  - `post/single.html:73-78` önceki/sonraki yazıyı bölümdeki bütün yazılar üzerinde elle döngüyle buluyor. Yazı başına O(n), toplamda O(n²). n şu an dil başına 2.
-- **Recommended fix:** Avatarı `partials/site/avatar.html` olarak çıkar (boyutu argüman alan ve kaynağı `return` eden bir partial; header ve yazı altı aynı çağrıyı kullanır). Önceki/sonraki için `{{ $pages := (where site.RegularPages "Section" .Section).ByDate }}`, ardından `$pages.Prev .` / `$pages.Next .`. **Dikkat:** Hugo'nun `Pages.Next/Prev` yönü liste sırasının tersidir. Yönü çıktıyı mevcut sürümle diff'leyerek doğrula.
-- **Expected impact estimate:** Performans etkisi ancak yüzlerce yazıda ölçülebilir olur. Kazanç ~10 satır tekrar ve tek bir avatar ayarı.
-- **Removal Safety:** Needs Verification (çıktı diff'i)
-- **Reuse Scope:** module (layouts)
-
-### O8. (AÇIK, GENİŞLEDİ) Gereksiz feed'ler ve ince sitemap girdileri
-- **Category:** Build / Cost
-- **Severity:** Low
-- **Impact:** Çıktı dosya sayısı, tarama bütçesi
-- **Evidence:** 24 `index.xml` üretiliyor. Bunların 2'si boş arama feed'i (`/search/index.xml`, `/tr/search/index.xml`), 16'sı etiket/kategori feed'i. Sitemap'te `/search/` ve `/tr/search/` var (JS ile dolan, `?q=` olmadan boş sayfa). 6 etiket x 2 dil = 12 etiket sayfası, her biri 1-2 yazı listeliyor.
-- **Recommended fix:** `content/search/_index.md` ve `_index.tr.md` front matter'ına `outputs: ["HTML"]` ve `sitemap: {disable: true}`. İsteğe bağlı: `[outputs] term = ["HTML"]`, `taxonomy = ["HTML"]` (etiket/kategori RSS'i gerekmiyorsa, −16 dosya). Etiket sayfaları kalsın: yazı sayısı arttıkça değer kazanırlar.
-- **Expected impact estimate:** 2-18 dosya daha az; sitemap'te ince sayfa yok.
-- **Removal Safety:** Safe
-- **Reuse Scope:** content front matter / config
+- **Reuse Scope:** local file
 
 ### O11. (AÇIK) `/search/` sayfası her tuşta listeyi boşaltıyor
 - **Category:** Frontend
 - **Severity:** Low
-- **Impact:** Yazarken titreme ve düzen kayması
-- **Evidence:** `assets/js/search.js:203-212` `pageUpdate()`: `pList.replaceChildren()`, `more.hidden = true` ve `history.replaceState` sorgu sonucu beklenmeden **önce** çalışıyor. `debouncedSearch` 150 ms sonra döndüğü için her tuşta liste boşalıp yeniden doluyor. Üstteki açılır panel (`update()`, satır 121) bunu doğru yapıyor: eski sonuçlar yenisi gelene kadar ekranda kalıyor.
-- **Recommended fix:** Temizleme ve URL güncellemesini, `res` gelip sorgunun hâlâ güncel olduğu doğrulandıktan sonraya taşı (Bölüm 6).
-- **Expected impact estimate:** Görsel kararlılık. Ölçülebilir hız etkisi yok.
+- **Evidence:** `assets/js/search.js:203-212`: `pList.replaceChildren()` ve `history.replaceState`, sonuç beklenmeden önce çalışıyor; 150 ms debounce yüzünden liste her tuşta boşalıp doluyor. Açılır panel (`update()`) bunu doğru yapıyor.
+- **Recommended fix:** O17 ile aynı yama (Bölüm 6).
 - **Removal Safety:** Safe
 - **Reuse Scope:** local file
 
-### O10. (UYGULANDI, 3. aşama) og:image 1920x1440 WebP
-- **Category:** Reliability / Network
+### O8. (AÇIK, yeniden denendi) Arama sayfası feed'i ve sitemap girdisi
+- **Category:** Build / Cost
 - **Severity:** Low
-- **Impact:** LinkedIn/WhatsApp link önizlemesi
-- **Evidence:** Her sayfada `og:image` = `head_image1_hu_*.webp` (47,020 byte, 1920x1440, 4:3). Önizleme kartları 1.91:1 (1200x630) kırpar. LinkedIn'in WebP og:image desteği tutarsız. Site LinkedIn odaklı bir portföy.
-- **Recommended fix:** `site/head.html`'de og:image için ayrı bir türev: `.Fill "1200x630 jpg Center q80"`. LinkedIn Post Inspector ile önce/sonra kontrol et.
-- **Removal Safety:** Needs Verification (LinkedIn Post Inspector)
-- **Reuse Scope:** local (`site/head.html`)
+- **Evidence:** 27 XML dosyası üretiliyor: 22 bölüm/etiket/kategori RSS'i, 2 ana RSS, 3 sitemap. `/search/index.xml` ve `/tr/search/index.xml` her zaman boş. `/search/` ve `/tr/search/` sitemap'te (JS ile dolan, `?q=` olmadan boş sayfa).
+- **Recommended fix:** `content/search/_index.md` ve `_index.tr.md` front matter'ına `outputs: ["HTML"]` ve `sitemap: {disable: true}`. **Denendi:** iki boş feed gidiyor, iki sitemap'ten `search` çıkıyor, başka fark yok. İsteğe bağlı: `/search/` için `<meta name="robots" content="noindex">` (header'daki link yüzünden yine taranır; `head.html`'deki notlar sayfası koşuluna benzer bir satır). Etiket/kategori RSS'leri (16 dosya) kalsın: zararsız ve konu bazlı abonelik isteyen olabilir.
+- **Removal Safety:** Safe (diff ile doğrulandı)
+- **Reuse Scope:** content front matter
 
-### O12. (AÇIK) CI her çalışmada Hugo `.deb` ve Pagefind'i sıfırdan indiriyor
+### O7. (AÇIK, yeniden denendi) Avatar üç yerde, önceki/sonraki yazı elle döngüyle
+- **Category:** Maintainability / Reuse Opportunity / Algorithm
+- **Severity:** Low
+- **Evidence:**
+  - `resources.Get site.Params.avatar` + `.Fill`: `partials/site/header.html:5-8` ve `partials/site/article.html:66-68` (ikisi de `"96x96 webp Center q85"`), `_default/about.html:19-22` (`"240x240 webp Center q85"`).
+  - `partials/site/article.html:79-84`: önceki/sonraki yazı bölümdeki bütün yazılar üzerinde elle döngüyle bulunuyor (yazı başına O(n), toplam O(n²); n bugün dil başına 2).
+- **Recommended fix:**
+  - Önceki/sonraki: `{{ $pages := (where site.RegularPages "Section" .Section).ByDate }}{{ $older := $pages.Next . }}{{ $newer := $pages.Prev . }}`. **Denendi:** çıktı birebir aynı. Yön, kopyaya geçici üçüncü bir yazı eklenerek üç konumda da (ilk, orta, son) doğrulandı. Hugo'nun `Next`/`Prev` adları liste sırasının tersidir; yorumda yazılmalı.
+  - Avatar: `partials/site/avatar.html` (boyutu argüman alır, kaynağı `return` eder). İki 96x96 çağrı aynı ayarı paylaşır.
+- **Expected impact estimate:** 6 satır döngü → 2 satır; ~yüzlerce yazıya kadar ölçülebilir hız etkisi yok.
+- **Removal Safety:** Önceki/sonraki: Safe (diff boş). Avatar: Safe (diff ile doğrulanmalı)
+- **Reuse Scope:** module (layouts)
+
+### O12. (AÇIK, düşük öncelik) CI her çalışmada Hugo ve Pagefind'i indiriyor, görselleri sıfırdan işliyor
 - **Category:** Build / Network
 - **Severity:** Low
-- **Impact:** Deploy süresi (birkaç saniye)
-- **Evidence:** `.github/workflows/hugo.yaml`: `wget` ile `.deb` + SHA256 kontrolü, `npx --yes pagefind@1.5.2`. Tema gittiği için checkout artık küçük.
-- **Recommended fix:** İsteğe bağlı: SHA ile pinli `actions/cache` ile `~/.npm`. SHA256 kontrolü önbellekten sonra da çalışmalı. Bu boyutta site için **düşük öncelik**.
-- **Expected impact estimate:** Çalışma başına ~5-10 sn.
+- **Evidence:** `.github/workflows/hugo.yaml`: `wget` + SHA256 ile `.deb`, `npx --yes pagefind@1.5.2`. `resources/` gitignore'da, yani CI her seferinde soğuk build yapıyor. **Ölçüldü (yerel):** soğuk build 1.2 sn, ılık 0.45 sn; fark 16 işlenmiş görsel (4 paylaşım kartı dahil).
+- **Recommended fix:** Şimdilik yok. Her yazı çifti 2 paylaşım kartı ekliyor; ~50 yazıda soğuk build birkaç saniyeyi geçerse SHA ile pinli `actions/cache` ile `resources/_gen/images` önbelleğe alınabilir (anahtar: `assets/img/**`, `assets/fonts/**`, `layouts/partials/site/share-image.html` hash'i).
+- **Expected impact estimate:** Bugün <1 sn. Kayıt için.
 - **Removal Safety:** Safe
 - **Reuse Scope:** CI
+
+### O9. (KAPANDI: yeniden ölçüldü, değmez) Footer'ı `partialCached` yapmak
+- **Evidence:** `--templateMetricsHints` footer için hâlâ %98 cache potansiyeli gösteriyor. **Ölçüldü:** çıktı birebir aynı, ama 7-9 çalıştırmalık medyanlarda fark gürültü içinde kaldı (aynı ayarla 112-154 ms arası oynuyor). Simgeler (`icon.html`, 408 çağrı) için de aynı deneme yapıldı: 112 ms vs 116 ms. Mutlak süre zaten ~0.1 sn. **Önerilmiyor**; ileride footer'a sayfaya bağlı bir şey eklenirse yanlış önbellek riski kazançtan büyük.
 
 ---
 
@@ -171,166 +161,82 @@ Site performans açısından iyi durumda. Bir yazı sayfasının ilk ziyareti to
 
 | # | İş | Süre | Kazanç | Onay gerekir mi |
 |---|---|---|---|---|
-| 1 | O13.1: `layouts/home.rss.xml` (sadece yazılar) | 5 dk | Akışta 3 yanlış öğe gider | Hayır (yeni dosya) |
-| 2 | O13.2: `/now/` sayfalarına sabit `date` | 1 dk | Sayfa gece yarısı push'unda kaybolmaz, akışta tekrar çıkmaz | Hayır |
-| 3 | O14: `[languages.tr] disableKinds = ["404"]` | 1 dk | Kök 404'ün dil düğmesi doğru yere gider, −1 ölü dosya | Hayır |
-| 4 | O15: 6 i18n anahtarı + 4 eski yorum | 5 dk | Doğru bağlam | Hayır |
-| 5 | O15: `_default/post.html`'i sil | 1 dk | −1 ölü şablon (diff boş) | **Evet** (silme) |
-| 6 | O8: arama sayfası `outputs`/`sitemap` | 2 dk | Boş feed ve ince sitemap girdisi gider | Hayır |
-| 7 | O9: footer `partialCached` | 1 dk | Build −%13 (diff boş) | Hayır |
+| 1 | O17 + O11: `search.js` nesil sayacı + gecikmeli temizleme | 10 dk | Arama sayfası doğru ve titremesiz | Hayır |
+| 2 | O19.1-3: 3 eski yorum + `unsafe` notunun listesi | 5 dk | Doğru güvenlik notu, doğru bağlam | Hayır |
+| 3 | O20: `/kart/` iletişim kontrolü (`warnf`) | 5 dk | Adres drift'i build uyarısına dönüşür | Hayır |
+| 4 | O18: `mainSections` | 5 dk | 4 elle senkron liste → 1 ayar (diff boş) | Hayır |
+| 5 | O8: arama sayfası `outputs` + `sitemap` | 2 dk | −2 boş feed, sitemap'te ince sayfa yok (diff ile doğrulandı) | Hayır |
+| 6 | O7: `Pages.Next/Prev` | 2 dk | 6 satır → 2 (diff boş) | Hayır |
+| 7 | O19.6-7: `HUGO_ENV` satırı, `complement` | 2 dk | Daha az kod | Hayır |
+| 8 | O21: `revokeObjectURL` gecikmesi | 1 dk + iPhone testi | Olası iOS hatası kapanır | Hayır |
+| 9 | O19.4-5: `type-filter` girdisi, kullanılmayan simgeler | 5 dk | Ölü kod gider | **Evet** (simge silme kararı) |
 
 ## 4) Deeper Optimizations (Do Next)
 
-1. **O7 refactor'u** (avatar partial + `Pages.Prev/Next`). Tek commit, önce/sonra `public/` diff'i boş olmalı.
-2. **O10 paylaşım görseli.** LinkedIn Post Inspector ile birlikte, 3. aşama planıyla.
-3. **`/kart/` için Tailwind kaynağını yeniden kurmak** (`tools/kart/`). Bu bir performans kazancı değil, ilk sınıf değişikliğinden önce gereken bir ön koşul (CLAUDE.md).
-4. **Önbellek başlıkları.** GitHub Pages fingerprint'li dosyalar dahil her şeye `Cache-Control: max-age=600` veriyor ve `immutable` ayarlanamıyor. Tek çözüm önüne bir CDN koymak. Bu boyutta site için gerekmez, kayıt için yazıldı.
+1. **O7 avatar partial'ı.** Tek commit, önce/sonra `public/` diff'i boş olmalı.
+2. **`/kart/`'ı ileride Hugo'dan üretmek.** O20'nin kalıcı çözümü: `layouts/kart/` altında ayrı bir şablon, `params.social`'dan okur, kendi sıkı CSP'si ve `kart.css`'i aynen kalır. Kart tasarımı değişmedikçe gerekmez; O20'deki uyarı yeterli.
+3. **CI görsel önbelleği** (O12), ancak yazı sayısı artıp soğuk build fark edilir hale gelirse.
+4. **Önbellek başlıkları.** GitHub Pages her şeye `max-age=600` veriyor, fingerprint'li dosyalar için `immutable` ayarlanamıyor. Tek yol önüne bir CDN koymak; bu boyutta site için gerekmez.
 
 **Bilerek önerilmeyenler (ölçüldü):**
-- **`syntax.css`'i ayırmak:** küçültülüp gzip'lenince ~1 KB. Bugün hiçbir sayfada kod bloğu yok (çıktıda `class=chroma` geçmiyor), ama ayırmak tek CSS isteğini ikiye böler. Kazanç bir RTT'den az.
-- **`/kart/business_foto1.jpg`'yi yeniden sıkıştırmak:** 102,181 byte, 540x486, zaten ~q80. Yeniden kodlama: JPEG q75 96,111 (−%6), WebP q75 88,292 (−%14). Gösterim `background-size:145%` ile ~232 CSS px, yani 2x ekranda boyut da doğru. Değmez.
-- **`theme-init.js`'i inline etmek:** CSP'ye hash eklemek gerekir, CLAUDE.md inline script'i yasaklıyor. Kazanç ~1 RTT, dosya 160 byte.
+- **Footer ve simgeleri önbelleğe almak** (O9): fark gürültü içinde.
+- **`syntax.css`'i ayırmak:** küçültülüp gzip'lenince ~1 KB; bugün hiçbir sayfada kod bloğu yok, ama ayırmak tek CSS isteğini ikiye böler.
+- **Paylaşım kartlarını küçültmek:** ~55 KB/adet `q85` JPG. Sadece önizleme botları indiriyor; `q85` metnin keskinliği için.
+- **`theme-init.js`'i satır içine almak:** CSP'ye hash gerekir, CLAUDE.md satır içi script'i yasaklıyor; dosya 160 byte.
+- **`/kart/business_foto1.jpg`:** önceki denetimde ölçüldü (WebP ile −%14), değmez.
 
 ## 5) Validation Plan
 
-**Referans (a105172):** 77 dosya, 677,148 byte, build 162 ms (`--templateMetrics` ile), uyarı yok.
+**Referans (75dca59):** 80 dosya, 893,332 byte, uyarı yok; ılık build ~115 ms, soğuk 1.2 sn.
 
 **Ölçüm (önce/sonra):**
 - `hugo --gc --minify --cleanDestinationDir` uyarısız bitmeli. `du -sb public; find public -type f | wc -l`.
-- Her değişiklikten önce `cp -r public ~/snap/hugo/common/public.before`, sonra build ve `diff -rq ~/snap/hugo/common/public.before public`. Beklenen farklar:
-  - O13: sadece `index.xml` ve `tr/index.xml`
-  - O14: `tr/404.html` gider, `404.html` değişir (hreflang ve dil düğmesi)
-  - O15 `post.html` silme, O9 footer, i18n temizliği: **fark yok**
-  - O8: `search/index.xml`, `tr/search/index.xml` gider, iki sitemap değişir
-- `hugo --templateMetrics --templateMetricsHints`: O9 sonrası footer satırı `cached` sütununda 34/36 göstermeli.
+- Her şablon/config değişikliğinden önce `cp -r public ~/snap/hugo/common/public.before`, sonra build ve `diff -rq ~/snap/hugo/common/public.before public`. Beklenen farklar:
+  - O18, O19 (yorumlar, `complement`, `type-filter`, simgeler), O7: **fark yok**
+  - O8: `search/index.xml` ve `tr/search/index.xml` gider, `en/sitemap.xml` ve `tr/sitemap.xml` değişir
+  - O20, O22: **fark yok** (sadece uyarı davranışı)
+  - O17, O11, O21: CSS/JS parmak izi değişir, HTML'de sadece SRI/dosya adı
 
 **Doğruluk testleri:**
-- O13: `grep -o '<item><title>[^<]*' public/index.xml public/tr/index.xml` sadece yazıları listelemeli. Akışı bir validator'da (ör. W3C Feed Validation Service) kontrol et. `/now/` için: atılabilir kopyada `lastmod`'u ileri bir tarihe al, `public/now/` yine üretilmeli (sabit `date` sayesinde).
-- O14: Canlıda var olmayan bir adres aç (`/tr/yok/`), TR düğmesi `/tr/`'ye gitmeli. `curl -sI https://melwis880.github.io/tr/404.html` 404 dönmeli (dosya artık yok).
-- O7: Önceki/sonraki linkleri iki dilde de aynı yönü gösteriyor.
-- O8: `/search/?q=n8n` CI'daki Pagefind ile hâlâ çalışıyor, sitemap'te `search` yok.
-- O11: `/search/` sayfasında hızlı yazarken liste boşalmıyor, URL'deki `?q=` sonuçla eşleşiyor.
-- Her değişiklikten sonra tarayıcı konsolunda CSP ihlali yok.
+- **O17/O11** (Pagefind dizini gerekir: geçici bir venv'de `pip install 'pagefind[bin]==1.5.2'`, `python -m pagefind --site public`, `hugo server` değil `python -m http.server -d public`):
+  - DevTools → Network → "Slow 3G". `/search/`'te "n8n" yaz, sonuçlar gelmeden hızla "n8n workflow"'a çevir. Listede sadece son sorgunun sonuçları olmalı, durum satırındaki sayı listedekiyle eşleşmeli.
+  - 10'dan fazla sonuç veren bir sorguda "Daha fazla"ya hızlı çift tıkla: tekrar eden sonuç olmamalı.
+  - Hızlı yazarken liste boşalmamalı; URL'deki `?q=` gösterilen sonuçla eşleşmeli.
+- **O20:** test kopyasında `hugo.toml`'daki e-postayı değiştir → build `WARN` vermeli. Geri al → uyarı yok.
+- **O21:** gerçek bir iPhone'da (Safari) `/kart/` → "Rehbere ekle": kişi kartı açılmalı. Değişiklikten önce de dene ki sorun gerçekten var mıydı bilinsin.
+- **O22:** test kopyasında taslak olmayan bir yazının ortasına "TODO: listesi" yaz → uyarı yok. Satır başına `TODO: bir şey` yaz → uyarı var.
+- **O7:** önceki/sonraki linkleri iki dilde de aynı yönü göstermeli (diff zaten bunu kapsıyor; yeni yazılar geldikçe göz kontrolü).
+- **O8:** `/search/?q=n8n` CI'daki Pagefind ile hâlâ çalışmalı.
+- Her değişiklikten sonra tarayıcı konsolunda CSP ihlali olmamalı (ana site ve `/kart/`).
 
-## 6) Optimized Code / Patch (O13, O14, O15 uygulandı; gerisi öneri)
+## 6) Optimized Code / Patch (öneri; hiçbiri uygulanmadı)
 
-**O13.1: yeni dosya `layouts/home.rss.xml`** (atılabilir kopyada denendi)
-```go-html-template
-{{- /* Ana sayfa RSS'i: sadece yazılar (Hakkımda, Projeler, /now akışa girmez; layouts/index.html ile
-     aynı süzgeç). Hugo'nun gömülü rss.xml'inden; fark $pages satırı ve sabit kanal başlığı. */ -}}
-{{- $pages := where site.RegularPages "Section" "in" (slice "post" "notes") }}
-{{- with site.Config.Services.RSS.Limit }}{{ if ge . 1 }}{{ $pages = $pages | first . }}{{ end }}{{ end }}
-{{- printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>{{ site.Title }}</title>
-    <link>{{ .Permalink }}</link>
-    <description>Recent content on {{ site.Title }}</description>
-    <generator>Hugo</generator>
-    <language>{{ site.Language.Locale }}</language>
-    {{- with $pages }}<lastBuildDate>{{ (index .ByLastmod.Reverse 0).Lastmod.Format "Mon, 02 Jan 2006 15:04:05 -0700" | safeHTML }}</lastBuildDate>{{ end }}
-    {{- with .OutputFormats.Get "rss" }}
-    {{ printf "<atom:link href=%q rel=\"self\" type=%q />" .Permalink .MediaType | safeHTML }}
-    {{- end }}
-    {{- range $pages }}
-    <item>
-      <title>{{ .Title }}</title>
-      <link>{{ .Permalink }}</link>
-      <pubDate>{{ .PublishDate.Format "Mon, 02 Jan 2006 15:04:05 -0700" | safeHTML }}</pubDate>
-      <guid>{{ .Permalink }}</guid>
-      <description>{{ .Summary | transform.XMLEscape | safeHTML }}</description>
-    </item>
-    {{- end }}
-  </channel>
-</rss>
-```
-(O16'da `notes` kaldırılırsa süzgeç `where site.RegularPages "Section" "post"` olur. İsteğe bağlı: `description` metnini bir i18n anahtarına taşı; TR akışında şu an da İngilizce.)
-
-**O13.2: `content/now/index.md` ve `index.tr.md`**
+**O17 + O11: `assets/js/search.js`, `/search/` sayfası bölümü (satır 192-228)**
 ```diff
- layout: now
-+date: 2026-10-10        # yayın tarihi; sabit kalır. Aylık güncellemede sadece lastmod değişir.
- lastmod: 2026-10-10
-```
-İsteğe bağlı, `hugo.toml` en üst seviyesi:
-```diff
- defaultContentLanguageInSubdir = false
-+# Saat yazılmamış tarihler (date: 2026-10-10) TR saatiyle okunur; CI UTC'de çalışsa da
-+# gece yarısından sonra push edilen yazı/sayfa "gelecekte" sayılıp düşmez.
-+timeZone = "Europe/Istanbul"
-```
-
-**O14: `hugo.toml`** (atılabilir kopyada denendi)
-```diff
-   [languages.tr]
-     label = "Türkçe"
-     locale = "tr-TR"
-     weight = 2
-+    # GitHub Pages sadece kökteki /404.html'i sunar (TR satırı onun içinde). /tr/404.html
-+    # hiç 404 olarak gösterilmiyordu, kök 404'ün dil düğmesi de oraya gidiyordu.
-+    disableKinds = ["404"]
-```
-
-**O15: i18n (`en.toml` ve `tr.toml` ikisinden de)**
-```diff
--[postedBy]
--other = "Posted by"
--[on]
--other = "on"
--[lastModified]
--other = "Last modified on"
--[newerPosts]
--other = "Newer Posts"
--[olderPosts]
--other = "Older Posts"
--[featuredTags]
--other = "FEATURED TAGS"
-```
-**O15: yorumlar**
-```diff
- layouts/_default/baseof.html
--{{- /* Sitenin temel iskeleti. CleanWhite temasının baseof'u yerine geçer; tema klasörü
--     şimdilik yerinde duruyor ama onun Bootstrap/jQuery tabanlı parçaları artık çağrılmıyor.
-+{{- /* Sitenin temel iskeleti (tema yok; bütün şablonlar layouts/ altında).
-      data-copy / data-copied: assets/js/site.js içindeki Kopyala butonunun metinleri. */ -}}
-
- layouts/taxonomy/{category,tag,terms}.html
--... Tema dosyasının yerine geçer. */ -}}
-+... */ -}}
-```
-**O15: silme (sadece açık "evet" ile)**
-```bash
-git rm layouts/_default/post.html
-```
-ve CLAUDE.md'de: "`_default/post.html` was added because the theme's file of that name hijacked the `/post/` list; with the theme gone it may be removable, check with a `public/` diff first" → kaldırıldı notu.
-
-**O9: `layouts/_default/baseof.html`** (atılabilir kopyada denendi, diff boş)
-```diff
--  {{ partial "site/footer.html" . }}
-+  {{- /* Footer sayfaya değil dile bağlı: dil başına bir kez render edilir. */}}
-+  {{ partialCached "site/footer.html" . site.Language.Lang }}
-```
-
-**O8: `content/search/_index.md` ve `_index.tr.md`**
-```diff
- ---
- title: "Search"
- description: "Search the site."
-+outputs: ["HTML"]
-+sitemap:
-+  disable: true
- ---
-```
-
-**O11: `assets/js/search.js` `pageUpdate()`**
-```diff
+   var current = [];
+   var shown = 0;
++  // Her yeni sorgu nesli artırır; await'ten dönen eski bir iş hiçbir şey yazmaz.
++  var gen = 0;
++
 +  function reset() { pList.replaceChildren(); more.hidden = true; current = []; shown = 0; }
 +  function syncUrl(q) {
 +    var url = new URL(window.location.href);
 +    if (q) url.searchParams.set("q", q); else url.searchParams.delete("q");
 +    history.replaceState(null, "", url);
 +  }
-+
+
+   async function showMore() {
++    var mine = gen;
+     var batch = current.slice(shown, shown + 10);
++    more.disabled = true;
+     var data = await Promise.all(batch.map(function (r) { return r.data(); }));
++    more.disabled = false;
++    if (mine !== gen) return;
+     data.forEach(function (d) { pList.appendChild(hit(d, "li")); });
+     shown += batch.length;
+     more.hidden = shown >= current.length;
+   }
+
    async function pageUpdate() {
      var q = pInput.value.trim();
 -    var url = new URL(window.location.href);
@@ -341,6 +247,7 @@ ve CLAUDE.md'de: "`_default/post.html` was added because the theme's file of tha
 -    current = [];
 -    shown = 0;
 -    if (!q) { pStatus.textContent = ""; return; }
++    var mine = ++gen;
 +    if (!q) { reset(); syncUrl(q); pStatus.textContent = ""; return; }
      var res;
      try {
@@ -349,11 +256,122 @@ ve CLAUDE.md'de: "`_default/post.html` was added because the theme's file of tha
        pStatus.textContent = S.unavailable;
        return;
      }
-     if (res === null || pInput.value.trim() !== q) return;
+-    if (res === null || pInput.value.trim() !== q) return;
++    if (res === null || mine !== gen) return;
 +    // Eski sonuçlar yenisi gelene kadar ekranda kalır: yazarken liste titremez.
 +    reset();
 +    syncUrl(q);
      current = res.results;
+     pStatus.textContent = current.length ? countText(current.length) : fill(S.none, q);
+     if (current.length) await showMore();
+   }
+```
+(`reset()` ile `showMore` arasında `gen` değişmediği için ilk `showMore` yazabilir; sonradan gelen bir sorgu `gen`'i artırıp onu iptal eder.)
+
+**O19.1-3: yorumlar**
+```diff
+ hugo.toml
+-      # yazıları değil, ön bilgi alanlarını markdownify ile basan şablonları da etkiler:
+-      # layouts/index.html (headline | markdownify) ve layouts/post/single.html
+-      # (updates[].note | markdownify) ham HTML'e açılır.
++      # yazıları değil, ön bilgi ve data alanlarını Markdown olarak basan şablonları da etkiler:
++      # layouts/index.html (headline), layouts/_default/about.html (greeting),
++      # layouts/partials/site/article.html (updates[].note), layouts/_default/projects.html
++      # (data/projects.yaml, RenderString) ve shortcodes/callout.html. Hepsi ham HTML'e açılır.
+
+ layouts/post/list.html
+-{{- /* Yazılar sayfası. Gövde: partials/site/writing-list.html (bkz. _default/post.html notu). */ -}}
++{{- /* Yazılar sayfası. Gövde: partials/site/writing-list.html. */ -}}
+
+ layouts/_default/section.html
+-{{- /* Kendi şablonu olmayan bölümler için genel liste (ör. ileride notes/). */ -}}
++{{- /* Kendi şablonu olmayan bölümler için genel liste (bugün kullanılmıyor; yeni bir bölüm WARN vermesin diye). */ -}}
+```
+
+**O18: `mainSections`** (denendi, diff boş)
+```diff
+ hugo.toml
+ [params]
++  # Yazı sayılan bölümler: ana sayfa, Yazılar listesi, RSS ve paylaşım kartı bunu kullanır.
++  mainSections = ["post", "notes"]
+
+ layouts/index.html, layouts/home.rss.xml, layouts/partials/site/writing-list.html
+-where site.RegularPages "Section" "in" (slice "post" "notes")
++where site.RegularPages "Section" "in" site.MainSections
+
+ layouts/partials/site/head.html
+-    {{- if and .IsPage (in (slice "post" "notes") .Section) }}
++    {{- if and .IsPage (in site.MainSections .Section) }}
+```
+
+**O19.7: `layouts/index.html`** (denendi, diff boş, sıra korunuyor)
+```diff
+   {{- $posts := where site.RegularPages "Section" "in" site.MainSections }}
+-  {{- $recent := slice }}
+-  {{- range $posts }}{{ if not (in $start .) }}{{ $recent = $recent | append . }}{{ end }}{{ end }}
++  {{- $recent := complement $start $posts }}
+```
+
+**O7: `layouts/partials/site/article.html:78-84`** (denendi, diff boş; 3 yazıyla yön doğrulandı)
+```diff
+       {{- /* Önceki = daha eski, sonraki = daha yeni yazı (aynı bölümde, tarihe göre). */}}
+-      {{- $older := false }}{{ $newer := false }}{{ $found := false }}
+-      {{- range (where site.RegularPages "Section" .Section).ByDate }}
+-        {{- if $found }}{{ if not $newer }}{{ $newer = . }}{{ end }}
+-        {{- else if eq . $ }}{{ $found = true }}
+-        {{- else }}{{ $older = . }}{{ end }}
+-      {{- end }}
++      {{- /* Hugo'da Next/Prev liste sırasının tersidir: eskiden yeniye sıralı listede Next = daha eski. */}}
++      {{- $pages := (where site.RegularPages "Section" .Section).ByDate }}
++      {{- $older := $pages.Next . }}{{ $newer := $pages.Prev . }}
+```
+
+**O20: `/kart/` iletişim kontrolü, `layouts/sitemap.xml`'in başına** (dil başına bir kez çalışır)
+```go-html-template
+{{- /* /kart/ Hugo'dan geçmiyor ve iletişim bilgisini elle yazıyor. params.social değişip kart
+     geride kalırsa build uyarı versin (CLAUDE.md: build uyarısız olmalı). */ -}}
+{{- if eq site.Language.Lang hugo.Sites.Default.Language.Lang }}
+  {{- $s := site.Params.social }}
+  {{- range slice "static/kart/index.html" "static/kart/kart.js" }}
+    {{- $f := readFile . }}
+    {{- if not (strings.Contains $f $s.email) }}{{ warnf "%s: email differs from params.social.email" . }}{{ end }}
+    {{- if not (strings.Contains $f (strings.TrimSuffix "/" $s.linkedin)) }}{{ warnf "%s: LinkedIn differs from params.social.linkedin" . }}{{ end }}
+  {{- end }}
+{{- end }}
+```
+(**Denendi:** adresler aynıyken çıktı birebir aynı ve uyarı yok; `hugo.toml`'daki e-posta değiştirilince iki dosya için de `WARN` geldi. `site.Sites` değil `hugo.Sites`: ilki Hugo 0.156'dan beri deprecated ve kendisi bir `WARN deprecated` üretiyor.)
+
+**O8: `content/search/_index.md` ve `_index.tr.md`** (denendi)
+```diff
+ ---
+ title: "Search"
+ description: "Search the site."
++outputs: ["HTML"]
++sitemap:
++  disable: true
+ ---
+```
+
+**O21: `static/kart/kart.js`**
+```diff
+   link.click();
+   document.body.removeChild(link);
+-  URL.revokeObjectURL(url);
++  // iOS Safari dosyayı asenkron açıyor; adres hemen iptal edilirse kişi kartı açılmayabilir.
++  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+```
+
+**O22: `layouts/partials/site/article.html:12`**
+```diff
+-{{- if and (not .Draft) (strings.Contains .RawContent "TODO:") }}{{ warnf "%s: TODO: line left from the archetype" .File.Path }}{{ end }}
++{{- if and (not .Draft) (findRE `(?m)^TODO:` .RawContent 1) }}{{ warnf "%s: TODO: line left from the archetype" .File.Path }}{{ end }}
+```
+
+**O19.6: `.github/workflows/hugo.yaml`**
+```diff
+         env:
+           HUGO_ENVIRONMENT: production
+-          HUGO_ENV: production
 ```
 
 ---
@@ -362,16 +380,15 @@ ve CLAUDE.md'de: "`_default/post.html` was added because the theme's file of tha
 
 | Bulgu | Durum |
 |---|---|
-| O1. Build çıktısının 4.46 MB'ı ölü (tema static'i, eski görseller) | **Uygulandı** (0477e31). Çıktı 5.16 MB → 0.68 MB |
-| O2. Temanın math/mermaid hook'ları ve `passthrough` | **Uygulandı** (tema ile gitti) |
-| O3. Tema tek partial için yükleniyordu | **Uygulandı** (`layouts/partials/webp-image.html`) |
-| O4. `favicon.ico` 72 KB | **Uygulandı** (5,238 byte) |
-| O5. Görsel hook'u boyutsuz ve hep `lazy` | **Uygulandı** (d88043f: `width`/`height`, ilk görsel eager; Hakkımda fotoğrafı `fetchpriority=high`) |
-| O6. `hugo.toml`'da ~30 ölü ayar | **Uygulandı** |
-| O7. Şablon tekrarları | **Kısmen**: `page.html` silindi. Avatar (artık 3 yer) ve önceki/sonraki açık → yukarıda |
-| O8. Gereksiz feed/sitemap | **Açık**, genişletildi → yukarıda |
-| O9. Header/footer cache | **Açık**, ölçüldü → yukarıda |
-| O10. og:image biçimi | **Açık** → yukarıda |
-| O11. Arama sayfası titremesi | **Açık** → yukarıda |
-| O12. CI indirme önbelleği | **Açık**, düşük öncelik → yukarıda |
-| 2026-10-09 denetimi (B1-B13) | Hepsi kapandı ya da yukarıdaki O-bulgularına taşındı |
+| O1-O6 | **Uygulandı** (2026-10-09/10) |
+| O7. Avatar tekrarı, önceki/sonraki döngüsü | **Açık**; önceki/sonraki yaması bu denetimde diff ile doğrulandı → yukarıda |
+| O8. Arama sayfası feed/sitemap | **Açık**; yaması diff ile doğrulandı → yukarıda |
+| O9. Footer cache | **Kapandı**: yeniden ölçüldü, kazanç gürültü içinde |
+| O10. og:image | **Uygulandı** (3. aşama, paylaşım kartları) |
+| O11. Arama sayfası titremesi | **Açık**; O17 ile aynı yama |
+| O12. CI indirme/önbellek | **Açık**, düşük öncelik; soğuk/ılık build ölçüldü |
+| O13. RSS'te yazı olmayan sayfalar, /now tarihi | **Uygulandı** (8ae7298, fed00b0) |
+| O14. `/tr/404.html` | **Uygulandı** (8ae7298) |
+| O15. Ölü `_default/post.html`, i18n, yorumlar | **Uygulandı** (8ae7298); 3. aşamada yeni eski yorumlar çıktı → O19 |
+| O16. `notes` dalları | **Kapandı** (notlar bölümü 3. aşamada kuruldu) |
+| 2026-10-09 denetimi (B1-B13) | Hepsi kapandı ya da O-bulgularına taşındı |
