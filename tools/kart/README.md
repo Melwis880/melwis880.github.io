@@ -13,6 +13,7 @@ Derlemeden yeni sınıf çalışmaz. Repo kökünden:
 ```bash
 # Tailwind v3.4.17 standalone CLI, repo dışına indir ve doğrula (Node gerekmez)
 curl -sSLo ~/tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-x64
+# Hash tutmazsa DUR: binary'yi çalıştırma, hash'i değiştirme, indirilen dosyayı sil.
 echo "7d24f7fa191d2193b78cd5f5a42a6093e14409521908529f42d80b11fde1f1d4  $HOME/tailwindcss" | sha256sum -c -
 chmod +x ~/tailwindcss
 
