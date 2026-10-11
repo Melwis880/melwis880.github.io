@@ -1,5 +1,32 @@
 {{- /* Dil başına sitemap. Hugo'nun gömülü sitemap.xml'inden; tek fark: sadece taslak notlar varken üretilen
      boş notlar sayfası (layouts/notes/list.html) listelenmez. */ -}}
+{{- /* /kart/ Hugo'dan geçmiyor ve iletişim bilgisini elle yazıyor. params.social değişip kart
+     geride kalırsa ya da karta başka bir adres, telefon veya WhatsApp eklenirse build uyarı versin
+     (CLAUDE.md: build uyarısız olmalı, tek e-posta, telefon yok). Uyarıda sadece dosya adı geçer,
+     bulunan adres yazılmaz: CI logları herkese açık. Burada, çünkü bu şablon dil başına bir kez
+     çalışır; kontrol sadece varsayılan dilde yapılır. */ -}}
+{{- if eq site.Language.Lang hugo.Sites.Default.Language.Lang }}
+  {{- $s := site.Params.social | default dict }}
+  {{- $email := $s.email | default "" }}
+  {{- $linkedin := strings.TrimSuffix "/" ($s.linkedin | default "") }}
+  {{- /* Boş alanla strings.Contains hep true döner ve kontrol kendini kapatır. */}}
+  {{- if not $email }}{{ errorf "params.social.email is empty: the /kart/ contact check cannot run" }}{{ end }}
+  {{- if not $linkedin }}{{ errorf "params.social.linkedin is empty: the /kart/ contact check cannot run" }}{{ end }}
+  {{- range $name := slice "static/kart/index.html" "static/kart/kart.js" }}
+    {{- $f := readFile $name }}
+    {{- if not (strings.Contains $f $email) }}{{ warnf "%s: params.social.email is missing" $name }}{{ end }}
+    {{- if not (strings.Contains $f $linkedin) }}{{ warnf "%s: params.social.linkedin is missing" $name }}{{ end }}
+    {{- range uniq (findRE `[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}` $f) }}
+      {{- if ne . $email }}{{ warnf "%s: an email other than params.social.email" $name }}{{ end }}
+    {{- end }}
+    {{- /* Handle, / ? # ya da tırnağa kadar alınır: "mericordu.x" kesilip "mericordu" sayılmasın. */}}
+    {{- range uniq (findRE `(?i)https?://(www\.)?linkedin\.com/in/[^/?#"'\s<>\\]+` $f) }}
+      {{- if ne . $linkedin }}{{ warnf "%s: a LinkedIn URL other than params.social.linkedin" $name }}{{ end }}
+    {{- end }}
+    {{- /* \\[nr]: JS dizesindeki "\r\nTEL;" satırında \b eşleşmez. */}}
+    {{- if findRE `(?i)(\b|\\[nr])tel[;:]|wa\.me|whatsapp` $f 1 }}{{ warnf "%s: phone or WhatsApp found" $name }}{{ end }}
+  {{- end }}
+{{- end }}
 {{ printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">

@@ -4,6 +4,12 @@
 > Yöntem: `hugo --gc --minify --cleanDestinationDir --templateMetrics --templateMetricsHints` ile gerçek build; `public/` dosya listesi ve gzip boyutları; `main.css`'teki 125 sınıfın şablon/JS/içerik/çıktıda kullanımı; i18n anahtarları ve simge adlarının çağrıları; JS dosyaları satır satır okundu. Önerilen her şablon/config değişikliği `~/snap/hugo/common/opt-test/` altındaki atılabilir bir kopyada denendi ve çıktı `diff -rq` ile karşılaştırıldı (gerekince kopyaya geçici yazılar eklenip yine diff alındı). Süreler 7-9 çalıştırmanın medyanı. Rakamlar aksi yazılmadıkça ölçülmüştür.
 > Tarih: 2026-10-11. **Hiçbir proje dosyası değiştirilmedi** (bu dosya dışında). Test kopyası `~/snap/hugo/common/opt-test/` hâlâ duruyor; silinmesi onay bekliyor.
 
+> **Güncelleme 2026-10-11 (`search-kart-fixes` dalı):** O17 + O11 ve O20 uygulandı. O17'ye iki ek: arama hata verirse eski liste temizlenir, "Daha fazla" düğmesini sadece geçerli sorgu yeniden açar. Doğrulama: HTML çıktısında JS adı ve SRI dışında fark yok, sitemap'ler birebir aynı; `/kart/` kontrolü adresler aynıyken sessiz, e-posta ya da LinkedIn değişince iki dosya için `WARN`; yerel Pagefind indeksi + Chrome (parça dosyaları 0.8 sn geciktirildi) ile yarış testi yeni kodda 3/3 geçti, canlıdaki eski kodda hata tekrarlandı (9 satır, karışık ve tekrarlı sonuç, durum satırı "4"). Konsol hatası ve CSP ihlali yok. Açık kalanlar: O18, O19, O21, O22, O8, O7.
+>
+> **Ek (aynı gün, security-audit sonrası, 4 düzeltme):** (1) `/kart/` kontrolü fazlasını da yakalıyor: `params.social.email` dışındaki her e-posta, `params.social.linkedin` ile birebir aynı olmayan her `linkedin.com/in/...` adresi (handle `/ ? #` ya da tırnağa kadar alınır, `mericordu.x` kesilip geçemez) ve `tel;`/`tel:`/`wa.me`/`whatsapp` için `WARN`. Uyarıda sadece dosya adı geçer, bulunan adres yazılmaz (CI logları herkese açık). `\b`, JS dizesindeki `"\r\nTEL;"` satırını kaçırdığı için desene `\\[nr]` eklendi. (2) `email` ya da `linkedin` boşsa `errorf`, build durur. (3) `showMore()` parça hatasını yakalıyor; sorgu hâlâ geçerliyse "Daha fazla" düğmesi açık ve görünür kalır. (4) `fill()` değiştirmeyi fonksiyonla yapıyor, sorgudaki `$&` aynen görünür.
+> Doğrulama: gerçek dosyalarla build uyarısız. Geçici kopyada (`~/snap/hugo/common/kart-test/`) negatif testlerin hepsi doğru sonucu verdi: ikinci e-posta, `TEL;` satırı, `"\r\nTEL:"`, `wa.me` linki, `mericordu-x`, `mericordu.x` için `WARN`; boş e-posta (`HUGO_PARAMS_SOCIAL_EMAIL=` ve hugo.toml) ve boş LinkedIn için `ERROR`, çıkış kodu 1. Arama: yerel Pagefind 1.5.2 indeksi, sistem Chrome + Playwright, parçalar sunucu tarafında 0.8 sn geciktirildi. Yeni kod 3/3 geçti: yarış (n8n sonra flx: 4 sonuç, 4 satır, `?q=flx`), parça hatası (yakalanmamış hata yok, düğme açık ve görünür), sonuçsuz `zzqx$&` araması (sayfada ve açılır panelde metin aynen), konsol hatası ve CSP ihlali yok. Aynı testler HEAD'deki kodla yarışta (4 sonuç, 9 satır), parça hatasında (`Failed to fetch` yakalanmadı, düğme gizlendi) ve `$&`'de (`zzqx%s` göründü) kaldı.
+> Bilinen sınır: Pagefind 1.5.2 başarısız parçanın promise'ini önbellekte tutuyor (`loaded_fragments[hash]`), bu yüzden aynı sayfada "Daha fazla" ile yeniden deneme yine hata verir (sessizce, yakalanmamış hata olmadan); sayfa yenilenince düzelir. Açılır paneldeki `update()` hâlâ `r.data()` hatasını yakalamıyor (aynı tür sorun, bu işin kapsamı dışında bırakıldı).
+
 ---
 
 ## 1) Optimization Summary
@@ -23,7 +29,7 @@ Kalan sorunlar hız değil **doğruluk ve bakım** sorunları.
 
 ## 2) Findings (Prioritized)
 
-### O17. (YENİ) `/search/` sayfası: "Daha fazla" ile yeni sorgu arasında yarış durumu
+### O17. (UYGULANDI 2026-10-11) `/search/` sayfası: "Daha fazla" ile yeni sorgu arasında yarış durumu
 - **Category:** Reliability / Frontend
 - **Severity:** Medium
 - **Impact:** Arama sayfasında doğru sonuç listesi
@@ -41,7 +47,7 @@ Kalan sorunlar hız değil **doğruluk ve bakım** sorunları.
 - **Removal Safety:** Safe
 - **Reuse Scope:** local file (`assets/js/search.js`)
 
-### O20. (YENİ) İletişim bilgisi `/kart/`'ta elle tekrar ediliyor; build kontrol etmiyor
+### O20. (UYGULANDI 2026-10-11) İletişim bilgisi `/kart/`'ta elle tekrar ediliyor; build kontrol etmiyor
 - **Category:** Reliability / Reuse Opportunity
 - **Severity:** Medium-Low
 - **Impact:** Kişisel veri kuralının (CLAUDE.md: tek e-posta) korunması, drift riski
@@ -114,7 +120,7 @@ Kalan sorunlar hız değil **doğruluk ve bakım** sorunları.
 - **Removal Safety:** Safe
 - **Reuse Scope:** local file
 
-### O11. (AÇIK) `/search/` sayfası her tuşta listeyi boşaltıyor
+### O11. (UYGULANDI 2026-10-11, O17 ile) `/search/` sayfası her tuşta listeyi boşaltıyor
 - **Category:** Frontend
 - **Severity:** Low
 - **Evidence:** `assets/js/search.js:203-212`: `pList.replaceChildren()` ve `history.replaceState`, sonuç beklenmeden önce çalışıyor; 150 ms debounce yüzünden liste her tuşta boşalıp doluyor. Açılır panel (`update()`) bunu doğru yapıyor.

@@ -28,7 +28,8 @@
     return pf.debouncedSearch(q, {}, 150);
   }
 
-  function fill(text, value) { return (text || "").replace("%s", value); }
+  // Fonksiyonla değiştirilir: sorgudaki "$&" gibi kalıplar açılmasın.
+  function fill(text, value) { return (text || "").replace("%s", function () { return value; }); }
 
   // HTML entity'lerini çözer (&amp; -> &); sonuç sadece metin olarak kullanılır.
   var decoder = document.createElement("textarea");
@@ -191,10 +192,30 @@
   var more = page.querySelector(".load-more");
   var current = [];
   var shown = 0;
+  // Her yeni sorgu nesli artırır; await'ten dönen eski bir iş hiçbir şey yazmaz.
+  var gen = 0;
+
+  function reset() { pList.replaceChildren(); more.hidden = true; current = []; shown = 0; }
+  function syncUrl(q) {
+    var url = new URL(window.location.href);
+    if (q) url.searchParams.set("q", q); else url.searchParams.delete("q");
+    history.replaceState(null, "", url);
+  }
 
   async function showMore() {
+    var mine = gen;
     var batch = current.slice(shown, shown + 10);
-    var data = await Promise.all(batch.map(function (r) { return r.data(); }));
+    more.disabled = true; // çift tıklama aynı 10 sonucu iki kez basmasın
+    var data;
+    try {
+      data = await Promise.all(batch.map(function (r) { return r.data(); }));
+    } catch (e) {
+      // Parça inmedi: düğme açık ve görünür kalır, tekrar denenebilir.
+      if (mine === gen) { more.disabled = false; more.hidden = false; }
+      return;
+    }
+    if (mine !== gen) return;
+    more.disabled = false;
     data.forEach(function (d) { pList.appendChild(hit(d, "li")); });
     shown += batch.length;
     more.hidden = shown >= current.length;
@@ -202,22 +223,19 @@
 
   async function pageUpdate() {
     var q = pInput.value.trim();
-    var url = new URL(window.location.href);
-    if (q) url.searchParams.set("q", q); else url.searchParams.delete("q");
-    history.replaceState(null, "", url);
-    pList.replaceChildren();
-    more.hidden = true;
-    current = [];
-    shown = 0;
-    if (!q) { pStatus.textContent = ""; return; }
+    var mine = ++gen;
+    if (!q) { reset(); syncUrl(q); pStatus.textContent = ""; return; }
     var res;
     try {
       res = await search(q);
     } catch (e) {
-      pStatus.textContent = S.unavailable;
+      if (mine === gen) { reset(); pStatus.textContent = S.unavailable; }
       return;
     }
-    if (res === null || pInput.value.trim() !== q) return;
+    if (res === null || mine !== gen) return;
+    // Eski sonuçlar yenisi gelene kadar ekranda kalır: yazarken liste titremez.
+    reset();
+    syncUrl(q);
     current = res.results;
     pStatus.textContent = current.length ? countText(current.length) : fill(S.none, q);
     if (current.length) await showMore();
